@@ -309,26 +309,30 @@ async def trade_loop():
 
         # ?? Escalón superior: dos sesiones perdidas consecutivas
         if sesiones_perdidas_consecutivas >= 2:
-            print("\n?? Se han perdido dos sesiones consecutivas. Reiniciando secuencia con coeficiente aumentado.")
-            notaabot = (
-                f"\n?? Se han perdido dos sesiones consecutivas. Reiniciando secuencia con coeficiente aumentado."
-            )
-            enviar_nota_telegram(notaabot)
-
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]  # reinicia secuencia
             COEFICIENTE_ESCALA *= 1.4  # aumenta en 40%
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
+            
+            print("\n?? Se han perdido dos sesiones consecutivas. Reiniciando secuencia con coeficiente aumentado.")
+            notaabot = (
+                f"Estrategia: LABOUCHERE POR SESIÓN + OSCAR'S GRIND ADAPTATIVO | PATRÓN RESULTADOS: {resultados}\n"
+                f"\nSe han perdido dos sesiones consecutivas. Reiniciando secuencia con coeficiente aumentado. Nuevo coeficiente: {COEFICIENTE_ESCALA:.2f}\n"
+                f"Estrategia: LABOUCHERE POR SESIÓN + OSCAR'S GRIND ADAPTATIVO | Secuencia inicial: {SECUENCIA_SESIONES}\n"
+                
+            )
+            enviar_nota_telegram(notaabot)
+
             continue
 
         sesion_actual += 1
 
         # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
-        if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3 and profit_total > 0:
+        if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3:
             COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.6)
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
-            print(f"\n?? Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
-            enviar_nota_telegram(f"\n?? Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
+            print(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
+            enviar_nota_telegram(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
             
 
     stats["sesiones_finalizadas"] = sesion_actual - 1
