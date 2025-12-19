@@ -13,8 +13,6 @@ import time
 
 MONTO_BASE = 1
 ESTRATEGIA = "martingala"  # Opciones: martingala, labouchere, orcar_grid, hibrida
-TAKE_PROFIT_TOTAL = 3000
-STOP_LOSS_TOTAL = -50000
 ESCALADO_FACTOR_GLOBAL = 1.4
 TAKE_PROFIT_SESION = MONTO_BASE * 300 # 🎯 Objetivo de ganancia por sesión
 STOP_LOSS_SESION = MONTO_BASE * -500# 🎯 Objetivo de ganancia por sesión
@@ -29,6 +27,56 @@ client = Quotex(
         password="Danydarien2020",
         lang="es"
     )
+
+SIMULATED_RESULTS = [
+    'P', 'P', 'P', 'G', 'G', 'G', 'P', 'G', 'P', 
+    'P', 'P', 'G', 'P', 'G', 'G', 'P', 'G', 'P', 'P',
+    'P', 'P', 'P', 'P', 'P', 'G', 'P', 'P', 'G', 'G',
+    'P', 'P', 'G', 'G', 'P', 'P', 'G', 'P', 'G', 'G',
+    'P', 'P', 'P', 'P', 'P', 'G', 'P', 'G', 'P', 'G', 'G', 'P', 'P', 'G',
+    'G', 'G', 'P', 'P', 'G', 'G', 'G', 'P', 'G', 'P', 'P', 'P', 'G', 'P',
+    'P', 'G', 'P', 'G', 'G', 'G', 'P', 'P', 'P', 'G', 'P', 'P', 'G', 'P', 'G',
+    'P', 'G', 'P', 'P', 'P', 'P', 'G', 'G', 'G', 'G', 'P', 'P', 'P', 'G', 'P', 'P',
+    'G', 'P', 'P', 'G', 'G', 'G', 'P', 'P', 'P', 'G', 'P', 'P', 'G', 'P', 'G', 'G', 'G',
+    'G', 'G', 'G', 'G', 'G', 'P', 'P', 'P', 'P', 'P', 'G', 'P', 'P', 'G', 'P', 'G', 'G', 'P',
+    'G', 'G', 'P', 'P', 'G', 'P', 'P', 'G', 'P', 'G', 'G', 'P', 'G', 'P', 'G', 'G', 'G', 'P', 'P',
+    'P', 'P', 'G', 'G', 'P', 'P', 'P', 'P', 'G', 'P', 'G', 'P', 'P', 'G', 'P', 'P', 'G', 'G', 'G', 'P',
+    'P', 'P', 'P', 'P', 'P', 'G', 'G', 'G', 'G', 'P', 'P', 'G', 'P', 'G', 'P', 'G', 'G', 'G', 'P', 'G',
+    'P', 'P', 'G', 'P', 'P', 'P', 'P', 'G', 'P', 'G', 'G', 'P', 'G', 'G', 'P', 'G', 'P', 'P', 'P', 'G',
+    'G', 'G', 'G', 'G', 'G', 'P', 'G', 'G', 'G', 'G', 'G', 'G', 'P', 'G', 'G', 'G', 'P', 'P', 'G', 'G', 
+    'P', 'P', 'G', 'P', 'P', 'P', 'P', 'G', 'G', 'P', 'P', 'G', 'P', 'G', 'P', 'P', 'P', 'G', 'G', 'P',
+    'G', 'P', 'P', 'P', 'G', 'G', 'G', 'G', 'P', 'G', 'G', 'P', 'P', 'P', 'P', 'G', 'P', 'P'
+    # ... puedes pegar aquí tu secuencia completa
+
+]
+SIM_INDEX = 0
+SALDO_INICIAL = 1000.0
+
+balance = SALDO_INICIAL
+
+
+async def execute_trade_simulado(monto_operacion, asset_name, direction, duration):
+    """Simula una operación usando la lista de resultados predefinidos."""
+    global SIM_INDEX, balance
+
+    if SIM_INDEX >= len(SIMULATED_RESULTS):
+        print("✅ Secuencia de resultados consumida. Fin de la simulación.")
+        exit(0)  # termina la ejecución del programa
+
+    resultado = SIMULATED_RESULTS[SIM_INDEX]
+    SIM_INDEX += 1
+
+    if resultado == "G":
+        profit = monto_operacion * 0.93
+        balance += profit
+        return balance, "Win", profit
+    else:
+        if monto_operacion > balance:
+            print(f"⚠️ Saldo insuficiente. Balance: {balance:.2f}, requerido: {monto_operacion:.2f}")
+            exit(0)
+        balance -= monto_operacion
+        return balance, "Loss", -monto_operacion
+
 
 
 # 🎯 Selector de estrategia
@@ -183,6 +231,14 @@ async def trade_loop():
     SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
     MONTO_MAXIMO_OPERACION = 175.0
     COEFICIENTE_ESCALA = 1.3
+    TAKE_PROFIT_TOTAL  = 2 * COEFICIENTE_ESCALA * (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1])
+    with open("config.env") as f:
+        for line in f:
+            if line.startswith("COEFICIENTE_ESCALA="):
+                COEFICIENTE_ESCALA = float(line.strip().split("=")[1])
+
+    print("Coeficiente Escala cargado:", COEFICIENTE_ESCALA)
+
     resultados = []
     estadofind = True
 
@@ -195,6 +251,8 @@ async def trade_loop():
 
     duration = 60
     balance = await client.get_balance()
+    STOP_LOSS_TOTAL = -503
+   # STOP_LOSS_TOTAL = - 0.50 * balance
     initial_balance = balance
     print(f"\n?? Bot iniciado con saldo inicial: {initial_balance:.2f}")
     print(f"?? Estrategia: LABOUCHERE POR SESIÓN + OSCAR'S GRIND ADAPTATIVO | Secuencia inicial: {SECUENCIA_SESIONES}\n")
@@ -213,6 +271,7 @@ async def trade_loop():
 
     sesion_actual = 1
     profit_total = 0
+    perdida_acumulada_sesion = 0
     sesiones_perdidas_consecutivas = 0  # contador de sesiones perdidas consecutivas
 
     while len(SECUENCIA_SESIONES) > 0:
@@ -225,6 +284,8 @@ async def trade_loop():
 
         saldo_sesion = 0
         operaciones_realizadas = 0
+        perdida_acumulada = 0
+
 
         while True:
             print(f"\n?? Sesión {sesion_actual} | TP: {take_profit_sesion:.2f} | SL: {stop_loss_sesion:.2f} | Monto actual: {monto_operacion:.2f}")
@@ -264,12 +325,14 @@ async def trade_loop():
             if result == "Win":
                 stats["ganadas"] += 1
                 saldo_sesion += profit
-                monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
+                perdida_acumulada = max(perdida_acumulada - profit, 0)
+                monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base) if perdida_acumulada > 0 else unidad_base
                 estadofind = True
             elif result == "Loss":
                 stats["perdidas"] += 1
                 saldo_sesion -= monto_operacion
                 monto_operacion *= ESCALADO_FACTOR_GLOBAL
+                perdida_acumulada += monto_operacion
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
                 estadofind = False
 
@@ -278,6 +341,38 @@ async def trade_loop():
             print(f"\n?? Balance actualizado: {balance:.2f}")
             print(f"?? Profit acumulado: {profit_total:.2f}")
             print(f"?? Saldo sesión: {saldo_sesion:.2f}")
+            
+            if profit_total >= TAKE_PROFIT_TOTAL:
+                print(f"\n✅ Objetivo global alcanzado: Profit total {profit_total:.2f} ≥ {TAKE_PROFIT_TOTAL:.2f}. Deteniendo bot.")
+                enviar_nota_telegram(f"Objetivo global alcanzado: Profit total {profit_total:.2f} ≥ {TAKE_PROFIT_TOTAL:.2f}. Bot detenido.")
+                ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
+                perdida_total = sum(op["monto"] for op in registro_operaciones if op["resultado"] == "Loss")
+                recuperacion_neta = ganancia_total - perdida_total
+                return {
+                "estado": "finalizado",
+                "balance_final": balance,
+                "ganancia_total": ganancia_total,
+                "perdida_total": perdida_total,
+                "recuperacion_neta": recuperacion_neta,
+                "stats": stats
+                }
+
+            if profit_total <= STOP_LOSS_TOTAL:
+                print(f"\n❌ Stop Loss global alcanzado: Profit total {profit_total:.2f} ≤ {STOP_LOSS_TOTAL:.2f}. Deteniendo bot.")
+                enviar_nota_telegram(f"Stop Loss global alcanzado: Profit total {profit_total:.2f} ≤ {STOP_LOSS_TOTAL:.2f}. Bot detenido.")
+                ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
+                perdida_total = sum(op["monto"] for op in registro_operaciones if op["resultado"] == "Loss")
+                recuperacion_neta = ganancia_total - perdida_total
+                return {
+                "estado": "finalizado",
+                "balance_final": balance,
+                "ganancia_total": ganancia_total,
+                "perdida_total": perdida_total,
+                "recuperacion_neta": recuperacion_neta,
+                "stats": stats
+                }
+            
+
 
             if saldo_sesion >= take_profit_sesion:
                 print(f"\n?? Take Profit alcanzado en sesión {sesion_actual} (+${saldo_sesion:.2f}).")
@@ -304,13 +399,21 @@ async def trade_loop():
         # ?? Control de sesiones perdidas consecutivas
         if saldo_sesion < 0:
             sesiones_perdidas_consecutivas += 1
+            perdida_acumulada_sesion += abs(saldo_sesion)
+
         else:
             sesiones_perdidas_consecutivas = 0
+            perdida_acumulada_sesion = max(perdida_acumulada_sesion - saldo_sesion, 0)
 
         # ?? Escalón superior: dos sesiones perdidas consecutivas
         if sesiones_perdidas_consecutivas >= 2:
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]  # reinicia secuencia
-            COEFICIENTE_ESCALA *= 1.4  # aumenta en 40%
+            perdfactor = (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1]) * 2
+            
+            MULTIPLICADOR = min(1.8, (abs(saldo_sesion) / perdfactor) ) # límite superior 1.8
+            COEFICIENTE_ESCALA *= MULTIPLICADOR
+
+            COEFICIENTE_ESCALA *= 1.6  # aumenta en 40%
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
             
@@ -329,7 +432,14 @@ async def trade_loop():
 
         # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
         if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3:
-            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.6)
+            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else 1.3
+            SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
+            print(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
+            enviar_nota_telegram(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
+            
+        # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
+        if perdida_acumulada_sesion == 0 and COEFICIENTE_ESCALA > 1.3:
+            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else 1.3
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
             print(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
             enviar_nota_telegram(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
