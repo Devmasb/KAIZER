@@ -1,4 +1,5 @@
 ﻿import telebot
+import subprocess
 from telebot import types
 
 TOKEN = "8544220244:AAEYKZ7QdTIkAWK-mVMXRNjXepqZtTenNjE"
