@@ -299,7 +299,7 @@ async def trade_loop():
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     await asyncio.sleep(10)
                     continue
-                esperar_antes_de_cierre_vela(13)
+                #esperar_antes_de_cierre_vela(13)
                 balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
 
                 if result in ["Doji", "Failed"]:
@@ -410,10 +410,15 @@ async def trade_loop():
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]  # reinicia secuencia
             perdfactor = (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1]) * 2
             
-            MULTIPLICADOR = min(1.8, (abs(saldo_sesion) / perdfactor) ) # límite superior 1.8
-            COEFICIENTE_ESCALA *= MULTIPLICADOR
+            # MULTIPLICADOR = min(1.8, (abs(saldo_sesion) / perdfactor) ) # límite superior 1.8
+            # COEFICIENTE_ESCALA *= MULTIPLICADOR
 
-            COEFICIENTE_ESCALA *= 1.6  # aumenta en 40%
+            # COEFICIENTE_ESCALA *= 1.6  # aumenta en 40%
+            
+            MULTIPLICADOR = max(1.10, (abs(saldo_sesion) / perdfactor) ) # límite superior 1.8
+            MULTIPLICADOR = max(1.15, MULTIPLICADOR ) # límite superior 1.8
+            COEFICIENTE_ESCALA *= MULTIPLICADOR
+            
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
             
