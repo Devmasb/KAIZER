@@ -280,6 +280,8 @@ async def trade_loop():
         take_profit_sesion = round(take_profit_sesion, 2)
         stop_loss_sesion = -take_profit_sesion
         unidad_base = round(take_profit_sesion / 2)
+        unidad_base = max(unidad_base, 1)
+        
         monto_operacion = min(unidad_base, MONTO_MAXIMO_OPERACION)
 
         saldo_sesion = 0
