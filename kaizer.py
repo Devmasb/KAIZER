@@ -327,7 +327,7 @@ async def trade_loop():
                 monto_operacion *= ESCALADO_FACTOR_GLOBAL
                 perdida_acumulada += monto_operacion
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
-                estadofind = False if operaciones_perdidas_consecutivas > 2 else True
+                estadofind = False 
 
             balance = await client.get_balance()
             profit_total = sum(op["profit"] for op in registro_operaciones)
