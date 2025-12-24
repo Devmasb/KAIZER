@@ -312,7 +312,9 @@ async def trade_loop():
             })
 
             resultados.append("G" if result == "Win" else "P")
+            ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
             perdida_total = sum(op["monto"] for op in registro_operaciones if op["resultado"] == "Loss")
+            recuperacion_neta = ganancia_total - perdida_total
             if result == "Win":
                 stats["ganadas"] += 1
                 saldo_sesion += profit
