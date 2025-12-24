@@ -408,8 +408,9 @@ async def trade_loop():
                 incremento_base += 0.05  # ejemplo: sube de 0.15 → 0.20 → 0.25
 
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]  # reinicia secuencia
-            COEFICIENTE_ESCALA *= (1+ nume_escalamientos * incremento_base)           
-            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA *0.8 > abs(perdida_total)/7  else abs(perdida_total)/7                     
+            COEFICIENTE_ESCALA *= (1+ nume_escalamientos * incremento_base)  
+            margenganancia = abs(recuperacion_neta)*2/11
+            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA *0.8 > 1.3 + margenganancia  else 1.3 + margenganancia                    
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
             
@@ -428,16 +429,24 @@ async def trade_loop():
 
         # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
         if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3:
+            temp = COEFICIENTE_ESCALA
             COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else 1.3
-            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA  < abs(perdida_total)/7  else abs(perdida_total)/7 
+            margenganancia = abs(recuperacion_neta)*2/11
+            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA  < 1.3 + margenganancia  else 1.3 + margenganancia
+            
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
             MULTIPLICADOR_CIERRE =max(1.3, COEFICIENTE_ESCALA / 1.3)
-            nume_escalamientos = max(0, nume_escalamientos-1)
-            incremento_base = max(0.15, incremento_base - 0.05)
-            print(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
-            enviar_nota_telegram(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
+            temp = temp / COEFICIENTE_ESCALA
             
+            nume_escalamientos = int(max(0, nume_escalamientos / temp))
+            incremento_base = max(0.15, incremento_base / temp)
 
+
+
+
+            print(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
+            enviar_nota_telegram(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}") 
+            
     stats["sesiones_finalizadas"] = sesion_actual - 1
 
     ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
