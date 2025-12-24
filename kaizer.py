@@ -412,7 +412,13 @@ async def trade_loop():
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]  # reinicia secuencia
             COEFICIENTE_ESCALA *= (1+ nume_escalamientos * incremento_base)  
             margenganancia = abs(recuperacion_neta)*2/11
-            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA *0.8 > 1.3 + margenganancia  else 1.3 + margenganancia                    
+            peso_coef = 0.8
+            peso_margen = 0.2
+            COEFICIENTE_ESCALA = (
+                COEFICIENTE_ESCALA 
+                if COEFICIENTE_ESCALA * 0.8 > margenganancia  
+                else (COEFICIENTE_ESCALA * peso_coef + margenganancia * peso_margen)
+            )                   
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
             
@@ -434,7 +440,9 @@ async def trade_loop():
             temp = COEFICIENTE_ESCALA
             COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else 1.3
             margenganancia = abs(recuperacion_neta)*2/11
-            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA  < 1.3 + margenganancia  else 1.3 + margenganancia
+            peso_coef = 0.8
+            peso_margen = 0.2
+            COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA  <  margenganancia  else COEFICIENTE_ESCALA * peso_coef + margenganancia * peso_margen
             
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
             MULTIPLICADOR_CIERRE =max(1.3, COEFICIENTE_ESCALA / 1.3)
