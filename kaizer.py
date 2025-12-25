@@ -418,7 +418,8 @@ async def trade_loop():
                 COEFICIENTE_ESCALA 
                 if COEFICIENTE_ESCALA * 0.8 > margenganancia  
                 else (COEFICIENTE_ESCALA * peso_coef + margenganancia * peso_margen)
-            )                   
+            )
+            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA)            
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
             
@@ -443,7 +444,7 @@ async def trade_loop():
             peso_coef = 0.8
             peso_margen = 0.2
             COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA  <  margenganancia  else COEFICIENTE_ESCALA * peso_coef + margenganancia * peso_margen
-            
+            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA)            
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
             MULTIPLICADOR_CIERRE =max(1.3, COEFICIENTE_ESCALA / 1.3)
             temp = temp / COEFICIENTE_ESCALA
