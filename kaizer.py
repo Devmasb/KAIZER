@@ -13,7 +13,7 @@ import time
 
 MONTO_BASE = 1
 ESTRATEGIA = "martingala"  # Opciones: martingala, labouchere, orcar_grid, hibrida
-ESCALADO_FACTOR_GLOBAL = 2.4
+ESCALADO_FACTOR_GLOBAL = 1.4
 TAKE_PROFIT_SESION = MONTO_BASE * 300 # 🎯 Objetivo de ganancia por sesión
 STOP_LOSS_SESION = MONTO_BASE * -500# 🎯 Objetivo de ganancia por sesión
 MONTO_MAXIMO = 2500.0  # Tope por operación
