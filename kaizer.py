@@ -13,7 +13,7 @@ import time
 
 MONTO_BASE = 1
 ESTRATEGIA = "martingala"  # Opciones: martingala, labouchere, orcar_grid, hibrida
-ESCALADO_FACTOR_GLOBAL = 1.4
+ESCALADO_FACTOR_GLOBAL = 2.4
 TAKE_PROFIT_SESION = MONTO_BASE * 300 # 🎯 Objetivo de ganancia por sesión
 STOP_LOSS_SESION = MONTO_BASE * -500# 🎯 Objetivo de ganancia por sesión
 MONTO_MAXIMO = 2500.0  # Tope por operación
@@ -319,14 +319,14 @@ async def trade_loop():
                 stats["ganadas"] += 1
                 saldo_sesion += profit
                 perdida_acumulada = max(perdida_acumulada - profit, 0)
-                monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base) if perdida_acumulada > 0 else unidad_base
+                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
             elif result == "Loss":
                 operaciones_perdidas_consecutivas += 1
                 stats["perdidas"] += 1
                 saldo_sesion -= monto_operacion
-                monto_operacion *= ESCALADO_FACTOR_GLOBAL
+                monto_operacion = unidad_base
                 perdida_acumulada += monto_operacion
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
                 estadofind = False 
