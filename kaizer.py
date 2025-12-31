@@ -270,6 +270,7 @@ async def trade_loop():
         stop_loss_sesion = -take_profit_sesion
         unidad_base = round(take_profit_sesion / 2)
         unidad_base = max(unidad_base, 1)
+        rendimiento = 0.5
         
         monto_operacion = min(unidad_base, MONTO_MAXIMO_OPERACION)
 
@@ -285,7 +286,7 @@ async def trade_loop():
 
             while True:
                 print("\n?? Buscando mejor activo para operar...")
-                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
+                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=rendimiento)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     await asyncio.sleep(10)
@@ -319,7 +320,8 @@ async def trade_loop():
                 stats["ganadas"] += 1
                 saldo_sesion += profit
                 perdida_acumulada = max(perdida_acumulada - profit, 0)
-                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
+                #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
+                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
             elif result == "Loss":
@@ -336,6 +338,8 @@ async def trade_loop():
             print(f"\n?? Balance actualizado: {balance:.2f}")
             print(f"?? Profit acumulado: {profit_total:.2f}")
             print(f"?? Saldo sesión: {saldo_sesion:.2f}")
+            totales = stats["ganadas"] + stats["perdidas"]
+            rendimiento = stats["ganadas"] /totales
             
             if profit_total >= TAKE_PROFIT_TOTAL:
                 print(f"\n✅ Objetivo global alcanzado: Profit total {profit_total:.2f} ≥ {TAKE_PROFIT_TOTAL:.2f}. Deteniendo bot.")

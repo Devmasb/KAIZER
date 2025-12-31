@@ -430,7 +430,7 @@ def validar_cruce_con_fractal_dinamico(closes, candles, direccion, periodo_sma=2
     return False
   
     
-async def find_best_asset(client, metodo_estructura="combinado", estado=True):
+async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
     codes_asset = await client.get_all_assets()
     activos_ordenados = []
 
@@ -470,8 +470,27 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
           continue
         
 
-        if estado:
-            return asset_name, direccion_macd                  
+        if estado >= 0.48:
+            return asset_name, direccion_macd 
+
+            
+        elif estado >= 0.46:
+        
+            if direccion_macd == "call":
+                   #niveles_filtrados = filtrar_niveles_relevantes(cierre_actual, resistencias, "call", margen)
+                   #print(f"?? niveles_filtrados: {niveles_filtrados}")
+                   #if confirmar_rupturacruce(candle_actual, resistencias, "call", 0) and detectar_pinbar_de_continuidad(candle_actual, direccion_macd) or detectar_martillo_de_continuidad(candle_actual, direccion_macd):
+                   if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
+                       return asset_name, "call"
+
+            elif direccion_macd == "put":
+                   #niveles_filtrados = filtrar_niveles_relevantes(cierre_actual, soportes, "put", margen)
+                  # print(f"?? niveles_filtrados: {niveles_filtrados}")
+                   if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
+                       return asset_name, "put"
+                        
+ 
+            
         else:
         
             if direccion_macd == "call":
@@ -487,7 +506,10 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                    if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0) and detectar_martillo_de_continuidad(candle_actual, direccion_macd):
                        return asset_name, "put"
                         
-              
+ 
+
+
+ 
         # 3️⃣ Confirmación de coincidencia
         
         # if  detectar_pinbar_de_continuidad(candle_prev, direccion_macd) or detectar_martillo_de_continuidad(candle_actual, direccion_macd):
