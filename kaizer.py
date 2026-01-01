@@ -13,7 +13,7 @@ import time
 
 MONTO_BASE = 1
 ESTRATEGIA = "martingala"  # Opciones: martingala, labouchere, orcar_grid, hibrida
-ESCALADO_FACTOR_GLOBAL = 1.4
+ESCALADO_FACTOR_GLOBAL = 1.6
 TAKE_PROFIT_SESION = MONTO_BASE * 300 # 🎯 Objetivo de ganancia por sesión
 STOP_LOSS_SESION = MONTO_BASE * -500# 🎯 Objetivo de ganancia por sesión
 MONTO_MAXIMO = 2500.0  # Tope por operación
@@ -211,7 +211,8 @@ async def execute_trade(amount, asset_name, direction, duration):
 # ?? Ciclo principal del bot con Labouchere por sesión y Oscar's Grind adaptativo por operación
 # ?? Ciclo principal del bot con Labouchere por sesión y Oscar's Grind adaptativo por operación
 async def trade_loop():
-    ESCALADO_FACTOR = ESCALADO_FACTOR_GLOBAL
+    ESCALADO_FACTOR_GLOBAL = 1.6
+    ESCALADO_FACTOR = 1.3
     SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
     MONTO_MAXIMO_OPERACION = 175.0
     MULTIPLICADOR_CIERRE = 1.3
@@ -221,6 +222,8 @@ async def trade_loop():
         for line in f:
             if line.startswith("COEFICIENTE_ESCALA="):
                 COEFICIENTE_ESCALA = float(line.strip().split("=")[1])
+                ESCALADO_FACTOR = COEFICIENTE_ESCALA 
+                MULTIPLICADOR_CIERRE = COEFICIENTE_ESCALA
 
     print("Coeficiente Escala cargado:", COEFICIENTE_ESCALA)
 
@@ -291,7 +294,7 @@ async def trade_loop():
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     await asyncio.sleep(10)
                     continue
-                esperar_antes_de_cierre_vela(1)
+                #esperar_antes_de_cierre_vela(1)
                 balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
 
                 if result in ["Doji", "Failed"]:
@@ -321,15 +324,17 @@ async def trade_loop():
                 saldo_sesion += profit
                 perdida_acumulada = max(perdida_acumulada - profit, 0)
                 #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
-                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
+                #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
+                monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
             elif result == "Loss":
                 operaciones_perdidas_consecutivas += 1
                 stats["perdidas"] += 1
                 saldo_sesion -= monto_operacion
-                monto_operacion = unidad_base
+                #monto_operacion = unidad_base
                 perdida_acumulada += monto_operacion
+                monto_operacion *= ESCALADO_FACTOR_GLOBAL
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
                 estadofind = False 
 
@@ -423,7 +428,7 @@ async def trade_loop():
                 if COEFICIENTE_ESCALA * 0.8 > margenganancia  
                 else (COEFICIENTE_ESCALA * peso_coef + margenganancia * peso_margen)
             )
-            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA)            
+            COEFICIENTE_ESCALA = max(ESCALADO_FACTOR, COEFICIENTE_ESCALA)            
             sesiones_perdidas_consecutivas = 0
             sesion_actual += 1
             
@@ -443,14 +448,14 @@ async def trade_loop():
         # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
         if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3:
             temp = COEFICIENTE_ESCALA
-            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else 1.3
+            COEFICIENTE_ESCALA = max(ESCALADO_FACTOR, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else ESCALADO_FACTOR
             margenganancia = abs(recuperacion_neta)*2/11
             peso_coef = 0.8
             peso_margen = 0.2
             COEFICIENTE_ESCALA = COEFICIENTE_ESCALA if COEFICIENTE_ESCALA  <  margenganancia  else COEFICIENTE_ESCALA * peso_coef + margenganancia * peso_margen
-            COEFICIENTE_ESCALA = max(1.3, COEFICIENTE_ESCALA)            
+            COEFICIENTE_ESCALA = max(ESCALADO_FACTOR, COEFICIENTE_ESCALA)            
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
-            MULTIPLICADOR_CIERRE =max(1.3, COEFICIENTE_ESCALA / 1.3)
+            MULTIPLICADOR_CIERRE =max(ESCALADO_FACTOR, COEFICIENTE_ESCALA / ESCALADO_FACTOR)
             temp = temp / COEFICIENTE_ESCALA
             
             nume_escalamientos = int(max(0, nume_escalamientos / temp))
