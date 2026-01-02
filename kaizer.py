@@ -289,13 +289,13 @@ async def trade_loop():
 
             while True:
                 print("\n?? Buscando mejor activo para operar...")
-                esperar_antes_de_cierre_vela(10)
+                esperar_antes_de_cierre_vela(0)
                 asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=rendimiento)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     #await asyncio.sleep(10)
                     continue
-                esperar_antes_de_cierre_vela(0)
+                #esperar_antes_de_cierre_vela(0)
                 balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
 
                 if result in ["Doji", "Failed"]:
@@ -325,17 +325,17 @@ async def trade_loop():
                 saldo_sesion += profit
                 perdida_acumulada = max(perdida_acumulada - profit, 0)
                 #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
-                #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
-                monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
+                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
+                #monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
             elif result == "Loss":
                 operaciones_perdidas_consecutivas += 1
                 stats["perdidas"] += 1
                 saldo_sesion -= monto_operacion
-                #monto_operacion = unidad_base
+                monto_operacion = unidad_base
                 perdida_acumulada += monto_operacion
-                monto_operacion *= ESCALADO_FACTOR_GLOBAL
+                #monto_operacion *= ESCALADO_FACTOR_GLOBAL
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
                 estadofind = False 
 
