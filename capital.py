@@ -465,31 +465,23 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
     
         candle_prev = candles[-2]
         candle_actual = candles[-1]
+        apertura = candle_actual["open"]
+        cierre   = candle_actual["close"]
+
+   
         sma_direction = analyzer.determine_sma_structure(closes)
         if direccion_macd != sma_direction:
-          continue
+           continue
         
 
-        if estado >= 0.46:
-            return asset_name, direccion_macd 
+      
 
-            
-        else:
-        
-            if direccion_macd == "call":
-                   #niveles_filtrados = filtrar_niveles_relevantes(cierre_actual, resistencias, "call", margen)
-                   #print(f"?? niveles_filtrados: {niveles_filtrados}")
-                   #if confirmar_rupturacruce(candle_actual, resistencias, "call", 0) and detectar_pinbar_de_continuidad(candle_actual, direccion_macd) or detectar_martillo_de_continuidad(candle_actual, direccion_macd):
-                   if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
-                       return asset_name, "call"
+        if direccion_macd == "call" and cierre < apertura:
+                    return asset_name, "call"
 
-            elif direccion_macd == "put":
-                   #niveles_filtrados = filtrar_niveles_relevantes(cierre_actual, soportes, "put", margen)
-                  # print(f"?? niveles_filtrados: {niveles_filtrados}")
-                   if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
+        elif direccion_macd == "put" and cierre > apertura:
+
                        return asset_name, "put"
-                        
-
  
         # 3️⃣ Confirmación de coincidencia
         
