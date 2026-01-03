@@ -476,10 +476,10 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
 
       
 
-        if direccion_macd == "call" and cierre < apertura:
+        if direccion_macd == "call" and cierre > apertura:
                     return asset_name, "call"
 
-        elif direccion_macd == "put" and cierre > apertura:
+        elif direccion_macd == "put" and cierre < apertura:
 
                        return asset_name, "put"
  
