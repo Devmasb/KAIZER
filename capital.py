@@ -476,17 +476,13 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
 
       
 
-        if direccion_macd == "call" and cierre > apertura:
+        if direccion_macd == "call" and cierre > apertura and cierre > candle_prev["high"]:
                     return asset_name, "call"
 
-        elif direccion_macd == "put" and cierre < apertura:
+        elif direccion_macd == "put" and cierre < apertura and cierre < candle_prev["low"]:
 
                        return asset_name, "put"
- 
-        # 3️⃣ Confirmación de coincidencia
-        
-        # if  detectar_pinbar_de_continuidad(candle_prev, direccion_macd) or detectar_martillo_de_continuidad(candle_actual, direccion_macd):
-            # return asset_name, direccion_macd
+
             
     print(f"?? Ningún activo cumple condiciones con método {metodo_estructura}.")
     return None, None      
