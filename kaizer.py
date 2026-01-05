@@ -217,7 +217,7 @@ async def trade_loop():
     MONTO_MAXIMO_OPERACION = 175.0
     MULTIPLICADOR_CIERRE = 1.3
     COEFICIENTE_ESCALA = 1.3
-    TAKE_PROFIT_TOTAL  = 2 * COEFICIENTE_ESCALA * (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1])
+   
     with open("config.env") as f:
         for line in f:
             if line.startswith("COEFICIENTE_ESCALA="):
@@ -226,7 +226,7 @@ async def trade_loop():
                 MULTIPLICADOR_CIERRE = COEFICIENTE_ESCALA
 
     print("Coeficiente Escala cargado:", COEFICIENTE_ESCALA)
-
+    TAKE_PROFIT_TOTAL  = 2 * COEFICIENTE_ESCALA * (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1])
     resultados = []
     estadofind = True
 
