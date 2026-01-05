@@ -458,10 +458,10 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
         candles = await client.get_candles(asset_name, int(time.time()), 30 * 20, 60)
         closes = [c['close'] for c in candles]            
         
-        fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
-        pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)  
-        soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
-        resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
+        # fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
+        # pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)  
+        # soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
+        # resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
     
         candle_prev = candles[-2]
         candle_actual = candles[-1]
