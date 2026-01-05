@@ -290,7 +290,7 @@ async def trade_loop():
             while True:
                 print("\n?? Buscando mejor activo para operar...")
                 esperar_antes_de_cierre_vela(0)
-                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=rendimiento)
+                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     #await asyncio.sleep(10)
