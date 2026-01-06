@@ -118,7 +118,7 @@ async def verificar_historial(client, asset, amount, direction):
 import requests
 
 def enviar_resumen_telegram(stats, balance_final, ganancia_total, perdida_total, recuperacion_neta):
-    TOKEN = "8544220244:AAEYKZ7QdTIkAWK-mVMXRNjXepqZtTenNjE"
+    TOKEN = "8218293709:AAHhtbiAsVtG3HHflIunyzgv5q2uP41F5DI"
     CHAT_ID = "1155988084"
 
     mensaje = (
@@ -149,7 +149,7 @@ def enviar_resumen_telegram(stats, balance_final, ganancia_total, perdida_total,
 # 📈 Ejecución de operación con verificación segura
 
 def enviar_nota_telegram(notaabot):
-    TOKEN = "8544220244:AAEYKZ7QdTIkAWK-mVMXRNjXepqZtTenNjE"
+    TOKEN = "8218293709:AAHhtbiAsVtG3HHflIunyzgv5q2uP41F5DI"
     CHAT_ID = "1155988084"
 
     mensaje = notaabot

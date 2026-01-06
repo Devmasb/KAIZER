@@ -2,7 +2,7 @@
 import subprocess
 from telebot import types
 
-TOKEN = "8544220244:AAEYKZ7QdTIkAWK-mVMXRNjXepqZtTenNjE"
+TOKEN = "8218293709:AAHhtbiAsVtG3HHflIunyzgv5q2uP41F5DI"
 CHAT_ID = 1155988084  # tu chat ID personal para seguridad
 
 
