@@ -473,25 +473,26 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
         if direccion_macd != sma_direction:
            continue
         
-
-        if estado > 0.46:
-            return asset_name, direccion_macd                  
-        elif estado > 0.40:
+        return asset_name, direccion_macd  
         
-            if es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                    return asset_name, "call"
+        # if estado > 0.46:
+            # return asset_name, direccion_macd                  
+        # elif estado > 0.40:
+        
+            # if es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                    # return asset_name, "call"
 
-            elif es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+            # elif es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
 
-                       return asset_name, "put"   
-        else:     
+                       # return asset_name, "put"   
+        # else:     
       
-            if direccion_macd == "call" and cierre > apertura and cierre > candle_prev["high"]:
-                        return asset_name, "call"
+            # if direccion_macd == "call" and cierre > apertura and cierre > candle_prev["high"]:
+                        # return asset_name, "call"
 
-            elif direccion_macd == "put" and cierre < apertura and cierre < candle_prev["low"]:
+            # elif direccion_macd == "put" and cierre < apertura and cierre < candle_prev["low"]:
 
-                           return asset_name, "put"
+                           # return asset_name, "put"
 
                 
     print(f"?? Ningún activo cumple condiciones con método {metodo_estructura}.")
