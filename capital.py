@@ -429,8 +429,8 @@ def validar_cruce_con_fractal_dinamico(closes, candles, direccion, periodo_sma=2
 
     return False
   
-    
-async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
+ 
+async def find_best_asset(client, metodo_estructura="combinado", estado=True):
     codes_asset = await client.get_all_assets()
     activos_ordenados = []
 
@@ -449,132 +449,53 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
     activos_ordenados.sort(key=lambda x: x[1], reverse=True)
 
     for asset_name, payout in activos_ordenados:
-        analyzer = TrendVolumeAnalyzer()
-
-        direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)
-        if direccion_macd not in ["call", "put"]:
-            continue
-        
         candles = await client.get_candles(asset_name, int(time.time()), 30 * 20, 60)
-        closes = [c['close'] for c in candles]            
-        
-        # fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
-        # pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)  
-        # soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
-        # resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
-    
+        closes = [c['close'] for c in candles]  
+        highs  = [c["high"] for c in candles]
+        lows   = [c["low"] for c in candles]
+       
         candle_prev = candles[-2]
         candle_actual = candles[-1]
         apertura = candle_actual["open"]
         cierre   = candle_actual["close"]
 
-   
-        sma_direction = analyzer.determine_sma_structure(closes)
-        if direccion_macd != sma_direction:
-           continue
-        
-        return asset_name, direccion_macd  
-        
-        # if estado > 0.46:
-            # return asset_name, direccion_macd                  
-        # elif estado > 0.40:
-        
-            # if es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                    # return asset_name, "call"
-
-            # elif es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-
-                       # return asset_name, "put"   
-        # else:     
+        if estado:
+                    analyzer = TrendVolumeAnalyzer()
+                    direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)                    
+                    if direccion_macd not in ["call", "put"]:
+                        continue
+                        
+                    sma_direction = analyzer.determine_sma_structure(closes)
+                    if direccion_macd != sma_direction:
+                       continue
+                        
+                    return asset_name, direccion_macd 
       
-            # if direccion_macd == "call" and cierre > apertura and cierre > candle_prev["high"]:
-                        # return asset_name, "call"
+        else:   
+            analyzer = TrendVolumeAnalyzer()
+            direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)                    
+            if direccion_macd not in ["call", "put"]:
+              continue
+                                   
+            fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
+            pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)  
+            soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
+            resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
+            
+            estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
+            # Últimos valores de las listas
+            k_prev = estocastico["k"][-2]
+            d_prev = estocastico["d"][-2]
 
-            # elif direccion_macd == "put" and cierre < apertura and cierre < candle_prev["low"]:
+            k_actual = estocastico["k"][-1]
+            d_actual = estocastico["d"][-1]
+            
+            if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0) and direccion_macd == 'call' and k_actual>=80  and k_prev<=80 and k_actual>=d_actual :
+                    return asset_name, "call"
 
-                           # return asset_name, "put"
+            elif confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0) and direccion_macd == 'put' and k_actual<=20  and k_prev>=20 and k_actual<=d_actual:
 
-                
+                       return asset_name, "put"
+
     print(f"?? Ningún activo cumple condiciones con método {metodo_estructura}.")
     return None, None      
-    
-# async def find_best_asset(client, metodo_estructura="combinado", estado=True):
-    # codes_asset = await client.get_all_assets()
-    # activos_ordenados = []
-
-    # # Filtrar por payout y apertura
-    # for asset_name in codes_asset.keys():
-        # try:
-            # asset_name, asset_data = await client.get_available_asset(asset_name, force_open=True)
-            # if not asset_data[2]:
-                # continue
-            # payout = client.get_payout_by_asset(asset_name)
-            # if payout and isinstance(payout, (int, float)) and payout >= 91:
-                # activos_ordenados.append((asset_name, payout))
-        # except:
-            # continue
-
-    # activos_ordenados.sort(key=lambda x: x[1], reverse=True)
-
-    # for asset_name, payout in activos_ordenados:
-        # analyzer = TrendVolumeAnalyzer()
-
-        # direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)
-        # if direccion_macd not in ["call", "put"]:
-            # continue
-        
-        # candles = await client.get_candles(asset_name, int(time.time()), 30 * 20, 60)
-        # closes = [c['close'] for c in candles]            
-        
-        # fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
-        # pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)  
-        # soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
-        # resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
-    
-        # candle_prev = candles[-2]
-        # candle_actual = candles[-1]
-        # sma_direction = analyzer.determine_sma_structure(closes)
-        # if direccion_macd != sma_direction:
-          # continue
-        
-        # f_max = max(fractales_alcistas)
-        # f_min = min(fractales_bajistas)
-        # rango = f_max - f_min
-
-        # # Niveles Fibonacci
-        # fib_382 = f_max - 0.382 * rango
-        # fib_500 = f_max - 0.500 * rango
-        # fib_618 = f_max - 0.618 * rango
-
-        # close = candle_actual["close"]
-
-        # # Evaluar proximidad a niveles
-        # margen = calcular_margen_dinamico(candles, factor=0.05)  # tolerancia
-        # cerca_382 = abs(close - fib_382) < margen
-        # cerca_500 = abs(close - fib_500) < margen
-        # cerca_618 = abs(close - fib_618) < margen
-    
-        # if True:
-            # # return asset_name, direccion_macd                  
-        # # else:
-        
-            # if cerca_618 or cerca_500:
-                   # #niveles_filtrados = filtrar_niveles_relevantes(cierre_actual, resistencias, "call", margen)
-                   # #print(f"?? niveles_filtrados: {niveles_filtrados}")
-                   # if  detectar_martillo_de_continuidad(candle_actual, direccion_macd):
-                       # return asset_name, "call"
-
-            # elif direccion_macd == "put":
-                   # #niveles_filtrados = filtrar_niveles_relevantes(cierre_actual, soportes, "put", margen)
-                  # # print(f"?? niveles_filtrados: {niveles_filtrados}")
-                   # if detectar_martillo_de_continuidad(candle_actual, direccion_macd):
-                       # return asset_name, "put"
-                        
-              
-        # # 3️⃣ Confirmación de coincidencia
-        
-        # # if  detectar_pinbar_de_continuidad(candle_prev, direccion_macd) or detectar_martillo_de_continuidad(candle_actual, direccion_macd):
-            # # return asset_name, direccion_macd
-            
-    # print(f"?? Ningún activo cumple condiciones con método {metodo_estructura}.")
-    # return None, None    
