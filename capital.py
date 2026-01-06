@@ -450,7 +450,7 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
     activos_ordenados.sort(key=lambda x: x[1], reverse=True)
 
     for asset_name, payout in activos_ordenados:
-        candles = await client.get_candles(asset_name, int(time.time()), 30 * 20, 60)
+        candles = await client.get_candles(asset_name, int(time.time()), 50 * 60, 60)
         closes = [c['close'] for c in candles]  
         highs  = [c["high"] for c in candles]
         lows   = [c["low"] for c in candles]
