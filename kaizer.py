@@ -217,7 +217,7 @@ async def trade_loop():
     MONTO_MAXIMO_OPERACION = 175.0
     MULTIPLICADOR_CIERRE = 1.3
     COEFICIENTE_ESCALA = 1.3
-    TAKE_PROFIT_TOTAL  = 2 * COEFICIENTE_ESCALA * (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1])
+   
     with open("config.env") as f:
         for line in f:
             if line.startswith("COEFICIENTE_ESCALA="):
@@ -226,7 +226,7 @@ async def trade_loop():
                 MULTIPLICADOR_CIERRE = COEFICIENTE_ESCALA
 
     print("Coeficiente Escala cargado:", COEFICIENTE_ESCALA)
-
+    TAKE_PROFIT_TOTAL  = 2 * COEFICIENTE_ESCALA * (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1])
     resultados = []
     estadofind = True
 
@@ -289,7 +289,7 @@ async def trade_loop():
 
             while True:
                 print("\n?? Buscando mejor activo para operar...")
-               # esperar_antes_de_cierre_vela(10)
+                esperar_antes_de_cierre_vela(0)
                 asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
@@ -325,17 +325,17 @@ async def trade_loop():
                 saldo_sesion += profit
                 perdida_acumulada = max(perdida_acumulada - profit, 0)
                 #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
-                #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
-                monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
+                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
+                #monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
             elif result == "Loss":
                 operaciones_perdidas_consecutivas += 1
                 stats["perdidas"] += 1
                 saldo_sesion -= monto_operacion
-                #monto_operacion = unidad_base
+                monto_operacion = unidad_base
                 perdida_acumulada += monto_operacion
-                monto_operacion *= ESCALADO_FACTOR_GLOBAL
+                #monto_operacion *= ESCALADO_FACTOR_GLOBAL
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
                 estadofind = False 
 

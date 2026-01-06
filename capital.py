@@ -4,6 +4,7 @@ import asyncio
 from pyquotex.config import credentials
 from pyquotex.stable_api import Quotex
 from indicators import TrendVolumeAnalyzer
+from pyquotex.utils.indicators import TechnicalIndicators
 
 # 🔍 Detectar pivotes clásicos
 def detectar_pivotes(candles, profundidad=2):
