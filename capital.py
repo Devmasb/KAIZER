@@ -430,73 +430,74 @@ def validar_cruce_con_fractal_dinamico(closes, candles, direccion, periodo_sma=2
 
     return False
   
- 
-async def find_best_asset(client, metodo_estructura="combinado", estado=True):
-    codes_asset = await client.get_all_assets()
-    activos_ordenados = []
+ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
+    try:
+        codes_asset = await client.get_all_assets()
+        activos_ordenados = []
 
-    # Filtrar por payout y apertura
-    for asset_name in codes_asset.keys():
-        try:
-            asset_name, asset_data = await client.get_available_asset(asset_name, force_open=True)
-            if not asset_data[2]:
+        # Filtrar por payout y apertura
+        for asset_name in codes_asset.keys():
+            try:
+                asset_name, asset_data = await client.get_available_asset(asset_name, force_open=True)
+                if not asset_data or not asset_data[2]:
+                    continue
+                payout = client.get_payout_by_asset(asset_name)
+                if payout and isinstance(payout, (int, float)) and payout >= 91:
+                    activos_ordenados.append((asset_name, payout))
+            except Exception as e:
+                print(f"⚠️ Error en asset {asset_name}: {e}")
                 continue
-            payout = client.get_payout_by_asset(asset_name)
-            if payout and isinstance(payout, (int, float)) and payout >= 91:
-                activos_ordenados.append((asset_name, payout))
-        except:
-            continue
 
-    activos_ordenados.sort(key=lambda x: x[1], reverse=True)
+        activos_ordenados.sort(key=lambda x: x[1], reverse=True)
 
-    for asset_name, payout in activos_ordenados:
-        candles = await client.get_candles(asset_name, int(time.time()), 50 * 60, 60)
-        closes = [c['close'] for c in candles]  
-        highs  = [c["high"] for c in candles]
-        lows   = [c["low"] for c in candles]
-       
-        candle_prev = candles[-2]
-        candle_actual = candles[-1]
-        apertura = candle_actual["open"]
-        cierre   = candle_actual["close"]
+        for asset_name, payout in activos_ordenados:
+            try:
+                candles = await client.get_candles(asset_name, int(time.time()), 50 * 60, 60)
+                if not candles or len(candles) < 2:
+                    continue
 
-        if estado:
-                    analyzer = TrendVolumeAnalyzer()
-                    direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)                    
-                    if direccion_macd not in ["call", "put"]:
-                        continue
-                        
+                closes = [c['close'] for c in candles]
+                highs  = [c["high"] for c in candles]
+                lows   = [c["low"] for c in candles]
+
+                candle_prev = candles[-2]
+                candle_actual = candles[-1]
+                apertura = candle_actual["open"]
+                cierre   = candle_actual["close"]
+
+                analyzer = TrendVolumeAnalyzer()
+                direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)
+                if direccion_macd not in ["call", "put"]:
+                    continue
+
+                if estado:
                     sma_direction = analyzer.determine_sma_structure(closes)
                     if direccion_macd != sma_direction:
-                       continue
-                        
-                    return asset_name, direccion_macd 
-      
-        else:   
-            analyzer = TrendVolumeAnalyzer()
-            direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)                    
-            if direccion_macd not in ["call", "put"]:
-              continue
-                                   
-            fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
-            pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)  
-            soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
-            resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
-            
-            estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
-            # Últimos valores de las listas
-            k_prev = estocastico["k"][-2]
-            d_prev = estocastico["d"][-2]
+                        continue
+                    return asset_name, direccion_macd
+                else:
+                    fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
+                    pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)
+                    estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
+                    if len(estocastico["k"]) < 2 or len(estocastico["d"]) < 2:
+                        continue
 
-            k_actual = estocastico["k"][-1]
-            d_actual = estocastico["d"][-1]
-            
-            if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0) and direccion_macd == 'call' and k_actual>=80  and k_prev<=80 and k_actual>=d_actual :
-                    return asset_name, "call"
+                    k_prev, d_prev = estocastico["k"][-2], estocastico["d"][-2]
+                    k_actual, d_actual = estocastico["k"][-1], estocastico["d"][-1]
 
-            elif confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0) and direccion_macd == 'put' and k_actual<=20  and k_prev>=20 and k_actual<=d_actual:
+                    if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0) and direccion_macd == 'call' and k_actual>=80 and k_prev<=80 and k_actual>=d_actual:
+                        return asset_name, "call"
 
-                       return asset_name, "put"
+                    elif confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0) and direccion_macd == 'put' and k_actual<=20 and k_prev>=20 and k_actual<=d_actual:
+                        return asset_name, "put"
 
-    print(f"?? Ningún activo cumple condiciones con método {metodo_estructura}.")
-    return None, None      
+            except Exception as e:
+                print(f"⚠️ Error analizando {asset_name}: {e}")
+                continue
+
+        print(f"❌ Ningún activo cumple condiciones con método {metodo_estructura}.")
+        return None, None
+
+    except Exception as e:
+        print(f"⚠️ Error general en find_best_asset: {e}")
+        return None, None

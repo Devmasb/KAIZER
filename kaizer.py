@@ -8,6 +8,8 @@ from estrategias.labouchere import estrategia_labouchere
 from estrategias.orcar_grid import estrategia_orcar_grid
 from estrategias.hibrida_martingala_orcar import estrategia_hibrida
 import time
+import logging
+import traceback
 
 # 🔧 Configuración general
 
@@ -37,6 +39,11 @@ SIM_INDEX = 0
 SALDO_INICIAL = 1000.0
 
 balance = SALDO_INICIAL
+logging.basicConfig(
+    filename="bot.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 
 async def execute_trade_simulado(monto_operacion, asset_name, direction, duration):
@@ -345,7 +352,7 @@ async def trade_loop():
             print(f"?? Profit acumulado: {profit_total:.2f}")
             print(f"?? Saldo sesión: {saldo_sesion:.2f}")
             totales = stats["ganadas"] + stats["perdidas"]
-            rendimiento = stats["ganadas"] /totales
+            #rendimiento = stats["ganadas"] /totales
             
             if profit_total >= TAKE_PROFIT_TOTAL:
                 print(f"\n✅ Objetivo global alcanzado: Profit total {profit_total:.2f} ≥ {TAKE_PROFIT_TOTAL:.2f}. Deteniendo bot.")
@@ -377,8 +384,6 @@ async def trade_loop():
                 "stats": stats
                 }
             
-
-
             if saldo_sesion >= take_profit_sesion:
                 print(f"\n?? Take Profit alcanzado en sesión {sesion_actual} (+${saldo_sesion:.2f}).")
                 if len(SECUENCIA_SESIONES) > 1:
@@ -441,11 +446,8 @@ async def trade_loop():
                 
             )
             enviar_nota_telegram(notaabot)
-
             continue
-
         sesion_actual += 1
-
         # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
         if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3:
             temp = COEFICIENTE_ESCALA
@@ -457,14 +459,9 @@ async def trade_loop():
             COEFICIENTE_ESCALA = max(ESCALADO_FACTOR, COEFICIENTE_ESCALA)            
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]
             MULTIPLICADOR_CIERRE =max(ESCALADO_FACTOR, COEFICIENTE_ESCALA / ESCALADO_FACTOR)
-            temp = temp / COEFICIENTE_ESCALA
-            
+            temp = temp / COEFICIENTE_ESCALA           
             nume_escalamientos = int(max(0, nume_escalamientos / temp))
             incremento_base = max(0.15, incremento_base / temp)
-
-
-
-
             print(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}")
             enviar_nota_telegram(f"\n Secuencia ganadora: reduciendo coeficiente a {COEFICIENTE_ESCALA:.2f}") 
             
@@ -494,8 +491,15 @@ async def trade_loop():
     }
 # ?? Entrada principal
 async def main():
-    resultado = await trade_loop()
-    await client.close()
+    try:
+        resultado = await trade_loop()
+        await client.close()
+    except Exception as e:
+        error_msg = f"⚠️ Error en main: {e}\n{traceback.format_exc()}"
+        enviar_nota_telegram(error_msg)
+        # Opcional: esperar unos segundos antes de reiniciar
+        # time.sleep(10)
+
 
     print("\n📋 RESUMEN FINAL DE EJECUCIÓN")
     print("────────────────────────────────────────────")
