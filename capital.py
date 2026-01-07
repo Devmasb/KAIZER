@@ -470,12 +470,12 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 if direccion_macd not in ["call", "put"]:
                     continue
 
-                if estado:
-                    sma_direction = analyzer.determine_sma_structure(closes)
-                    if direccion_macd != sma_direction:
-                        continue
-                    return asset_name, direccion_macd
-                else:
+                if True:
+                    # sma_direction = analyzer.determine_sma_structure(closes)
+                    # if direccion_macd != sma_direction:
+                        # continue
+                    # return asset_name, direccion_macd
+                # else:
                     fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
                     pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)
                     estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
