@@ -430,7 +430,7 @@ def validar_cruce_con_fractal_dinamico(closes, candles, direccion, periodo_sma=2
 
     return False
   
- async def find_best_asset(client, metodo_estructura="combinado", estado=True):
+async def find_best_asset(client, metodo_estructura="combinado", estado=True):
     try:
         codes_asset = await client.get_all_assets()
         activos_ordenados = []
