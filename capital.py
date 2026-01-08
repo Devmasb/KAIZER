@@ -471,9 +471,9 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                     continue
 
                 if True:
-                    sma_direction = analyzer.determine_sma_structure(closes)
-                    if direccion_macd != sma_direction:
-                        continue
+                    # sma_direction = analyzer.determine_sma_structure(closes)
+                    # if direccion_macd != sma_direction:
+                        # continue
                     return asset_name, direccion_macd
                 # else:
                     # fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
