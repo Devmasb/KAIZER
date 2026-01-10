@@ -461,7 +461,7 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 lows   = [c["low"] for c in candles]
 
                 candle_prev = candles[-2]
-                candle_prev3 = ventana[-3]
+                candle_prev3 = candles[-3]
                 candle_actual = candles[-1]
                 apertura = candle_actual["open"]
                 cierre   = candle_actual["close"]
