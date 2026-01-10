@@ -470,7 +470,14 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)
                 if direccion_macd not in ["call", "put"]:
                     continue
+                k_prev, d_prev = estocastico["k"][-2], estocastico["d"][-2]
+                k_actual, d_actual = estocastico["k"][-1], estocastico["d"][-1]
 
+                estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
+                if len(estocastico["k"]) < 2 or len(estocastico["d"]) < 2:
+                    continue
+                    
+                    
                 if estado:
                     if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
                             return asset_name, "put" 
@@ -490,6 +497,8 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                     elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
                                  return asset_name, "call"  
 
+                        
+                        
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
                 continue
