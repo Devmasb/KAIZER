@@ -461,6 +461,7 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 lows   = [c["low"] for c in candles]
 
                 candle_prev = candles[-2]
+                candle_prev3 = ventana[-3]
                 candle_actual = candles[-1]
                 apertura = candle_actual["open"]
                 cierre   = candle_actual["close"]
@@ -470,26 +471,24 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 if direccion_macd not in ["call", "put"]:
                     continue
 
-                if True:
-                    # sma_direction = analyzer.determine_sma_structure(closes)
-                    # if direccion_macd != sma_direction:
-                        # continue
-                    return asset_name, direccion_macd
-                # else:
-                    # fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
-                    # pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)
-                    # estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
-                    # if len(estocastico["k"]) < 2 or len(estocastico["d"]) < 2:
-                        # continue
+                if estado:
+                    if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                            return asset_name, "put" 
 
-                    # k_prev, d_prev = estocastico["k"][-2], estocastico["d"][-2]
-                    # k_actual, d_actual = estocastico["k"][-1], estocastico["d"][-1]
 
-                    # if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0) and direccion_macd == 'call' and k_actual>=80 and k_prev<=80 and k_actual>=d_actual:
-                        # return asset_name, "call"
+                    elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                 return asset_name, "call"  
+                    
+                
+                else:
+                    #sma_direction = analyzer.determine_sma_structure(closes)
+       
+                    if k_actual>=80  and k_prev>=80 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                   return asset_name, "put" 
 
-                    # elif confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0) and direccion_macd == 'put' and k_actual<=20 and k_prev>=20 and k_actual<=d_actual:
-                        # return asset_name, "put"
+
+                    elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                 return asset_name, "call"  
 
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
