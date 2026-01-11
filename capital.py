@@ -478,27 +478,32 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 k_prev, d_prev = estocastico["k"][-2], estocastico["d"][-2]
                 k_actual, d_actual = estocastico["k"][-1], estocastico["d"][-1]
                    
-                    
-                if estado:
-                    if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                            return asset_name, "put" 
+        
+                if k_actual>=80  and k_prev>=80 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                               return asset_name, "put" 
 
 
-                    elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                 return asset_name, "call"  
-                    
+                elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                             return asset_name, "call"  
                 
-                else:
-                    #sma_direction = analyzer.determine_sma_structure(closes)
-       
-                    if k_actual>=80  and k_prev>=80 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                                   return asset_name, "put" 
+                          
+                   
+                elif k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                return asset_name, "put" 
 
 
-                    elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                 return asset_name, "call"  
+                elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                              return asset_name, "call"  
+             
+                   
+                if k_actual>=95  and k_prev<=85 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high']:
+                               return asset_name, "put" 
 
-                        
+
+                elif  k_actual<=5  and k_prev>=15 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low']:
+                             return asset_name, "call"  
+                
+                 
                         
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
