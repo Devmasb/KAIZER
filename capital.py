@@ -496,14 +496,20 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                               return asset_name, "call"  
              
                    
-                if k_actual>=95  and k_prev<=85 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high']:
-                               return asset_name, "put" 
+                # if k_actual>=95  and k_prev<=85 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high']:
+                               # return asset_name, "put" 
 
 
-                elif  k_actual<=5  and k_prev>=15 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low']:
-                             return asset_name, "call"  
-                
-                 
+                # elif  k_actual<=5  and k_prev>=15 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low']:
+                             # return asset_name, "call"  
+                 if  k_actual > d_actual and k_prev < d_prev and direccion_macd=="call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call"):
+                               return asset_name, "call" 
+
+
+                elif   k_actual < d_actual and k_prev > d_prev and  direccion_macd=="put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put"):
+                             return asset_name, "put"  
+                               
+                             
                         
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
