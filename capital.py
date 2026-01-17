@@ -594,19 +594,17 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
 
                 elif detectar_harami_bajista(candles) == "put":
                                return asset_name, "call" 
-
-                if direccion_macd == "call":
-                           if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
-                               return asset_name, "call"
-
-                elif direccion_macd == "put":
-
-                           if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
-                               return asset_name, "put"
-                                  
                 if estado:
                 
-                    return asset_name, direccion_macd                             
+                    if direccion_macd == "call":
+                               if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
+                                   return asset_name, "call"
+
+                    elif direccion_macd == "put":
+
+                               if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
+                                   return asset_name, "put"
+                                                               
                         
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
