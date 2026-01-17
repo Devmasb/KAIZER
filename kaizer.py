@@ -246,7 +246,7 @@ async def trade_loop():
 
     duration = 60
     balance = await client.get_balance()
-    STOP_LOSS_TOTAL = -503
+    STOP_LOSS_TOTAL = -500003
    # STOP_LOSS_TOTAL = - 0.50 * balance
     initial_balance = balance
     print(f"\n🚀 Bot iniciado con saldo inicial: {initial_balance:.2f}")
