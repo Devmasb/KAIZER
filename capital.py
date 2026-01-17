@@ -500,6 +500,8 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 closes = [c['close'] for c in candles]
                 highs  = [c["high"] for c in candles]
                 lows   = [c["low"] for c in candles]
+                fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
+                pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)           
 
                 candle_prev = candles[-2]
                 candle_prev3 = candles[-3]
@@ -520,65 +522,91 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 k_actual, d_actual = estocastico["k"][-1], estocastico["d"][-1]
                 
                 direccionconteovelas = chequear_patron_tres_velas(candles[:-2])
+
+           
+                if k_actual>=20 and k_prev<=20 and k_actual > d_actual and direccion_macd == "call" :
+                               return asset_name, "call" 
+                               
+
+                elif k_actual<=80 and k_prev>=80 and k_actual < d_actual and direccion_macd == "put" :
+                               return asset_name, "put" 
+                               
+
+                if k_actual>=80  and k_prev>=80 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                               return asset_name, "put" 
+
+
+                elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                             return asset_name, "call"  
+                
+                if k_actual>k_prev and direccion_macd == "call" and direccionconteovelas== "call" and candle_prev['high'] > candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  candle_prev['close'] <= candle_prev3['close'] and  candle_prev['open'] <= candle_prev3['close']:
+                               return asset_name, "call" 
+
+
+                elif  k_actual<k_prev  and direccion_macd == "put" and direccionconteovelas== "put" and candle_prev['low'] < candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  candle_prev['close'] >= candle_prev3['close'] and  candle_prev['open'] >= candle_prev3['close']:
+                             return asset_name, "put"  
+                          
                    
+                if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                return asset_name, "put" 
+
+
+                elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                              return asset_name, "call"  
+             
+                                                                 
+                if direccionconteovelas== "call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                               return asset_name, "call" 
+
+
+                elif  direccionconteovelas== "put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                             return asset_name, "put"  
+                             
+                if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
+                               
+                                return asset_name, "call" 
+                                             
+                               
+
+                elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):
+                             
+                                return asset_name, "put" 
+                          
+
+                if direccion_macd == "call" and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and not detectar_martillo_de_continuidad(candle_prev, "put")  :
+                               return asset_name, "call" 
+
+
+                elif direccion_macd == "put" and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and not detectar_martillo_de_continuidad(candle_prev, "call")  :
+                               return asset_name, "put" 
+
+
+                if  k_actual > d_actual and k_prev < d_prev and direccion_macd=="call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                           return asset_name, "call" 
+
+
+                elif   k_actual < d_actual and k_prev > d_prev and  direccion_macd=="put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and  es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                         return asset_name, "put"  
+
+
+                if detectar_harami_alcista(candles) == "call":
+                               return asset_name, "put" 
+
+                elif detectar_harami_bajista(candles) == "put":
+                               return asset_name, "call" 
+
+                if direccion_macd == "call":
+                           if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
+                               return asset_name, "call"
+
+                elif direccion_macd == "put":
+
+                           if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
+                               return asset_name, "put"
+                                  
                 if estado:
                 
-                    return asset_name, direccion_macd
-                    
-                else:
-
-                    if k_actual>=20 and k_prev<=20 and k_actual > d_actual and direccion_macd == "call" :
-                                   return asset_name, "call" 
-                                   
-
-                    elif k_actual<=80 and k_prev>=80 and k_actual < d_actual and direccion_macd == "put" :
-                                   return asset_name, "put" 
-                                   
-
-                    if k_actual>=80  and k_prev>=80 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                                   return asset_name, "put" 
-
-
-                    elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                 return asset_name, "call"  
-                    
-                    if k_actual>k_prev and direccion_macd == "call" and direccionconteovelas== "call" and candle_prev['high'] > candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  candle_prev['close'] <= candle_prev3['close'] and  candle_prev['open'] <= candle_prev3['close']:
-                                   return asset_name, "call" 
-
-
-                    elif  k_actual<k_prev  and direccion_macd == "put" and direccionconteovelas== "put" and candle_prev['low'] < candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  candle_prev['close'] >= candle_prev3['close'] and  candle_prev['open'] >= candle_prev3['close']:
-                                 return asset_name, "put"  
-                              
-                       
-                    if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                                    return asset_name, "put" 
-
-
-                    elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                  return asset_name, "call"  
-                 
-                                                                     
-                    if direccionconteovelas== "call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                   return asset_name, "call" 
-
-
-                    elif  direccionconteovelas== "put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                                 return asset_name, "put"  
-                                 
-                    if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
-                                   
-                                    return asset_name, "call" 
-                                                 
-                                   
-
-                    elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):
-                                 
-                                    return asset_name, "put" 
-                              
-
-                                    
-                   
-                                 
+                    return asset_name, direccion_macd                             
                         
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
@@ -590,3 +618,63 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
     except Exception as e:
         print(f"⚠️ Error general en find_best_asset: {e}")
         return None, None
+
+    
+def detectar_harami_alcista(candles):
+    """
+    Detecta patrón Harami alcista en las últimas 3 velas.
+    Retorna 'call' si se confirma, None si no hay patrón.
+    """
+
+    if len(candles) < 3:
+        return None
+
+    v1, v2, v3 = candles[-3], candles[-2], candles[-1]
+
+    # 1. Primera vela bajista larga
+    cuerpo_v1 = abs(v1["close"] - v1["open"])
+    rango_v1 = v1["high"] - v1["low"]
+    es_bajista_larga = v1["close"] < v1["open"] and cuerpo_v1 > rango_v1 * 0.5
+
+    # 2. Segunda vela alcista pequeña dentro del cuerpo de la primera
+    cuerpo_v2 = abs(v2["close"] - v2["open"])
+    es_alcista_pequena = v2["close"] > v2["open"] and cuerpo_v2 < cuerpo_v1 * 0.6
+    dentro_del_cuerpo = v2["open"] > v1["close"] and v2["close"] < v1["open"]
+
+    # 3. Confirmación: tercera vela cierra por encima del máximo de la segunda
+    confirmacion = v3["close"] > v2["high"]
+
+    if es_bajista_larga and es_alcista_pequena and dentro_del_cuerpo and confirmacion:
+        return "call"
+
+    return None
+    
+def detectar_harami_bajista(candles):
+    """
+    Detecta patrón Harami bajista en las últimas 3 velas.
+    Retorna 'put' si se confirma, None si no hay patrón.
+    """
+
+    if len(candles) < 3:
+        return None
+
+    v1, v2, v3 = candles[-3], candles[-2], candles[-1]
+
+    # 1. Primera vela alcista larga
+    cuerpo_v1 = abs(v1["close"] - v1["open"])
+    rango_v1 = v1["high"] - v1["low"]
+    es_alcista_larga = v1["close"] > v1["open"] and cuerpo_v1 > rango_v1 * 0.5
+
+    # 2. Segunda vela bajista pequeña dentro del cuerpo de la primera
+    cuerpo_v2 = abs(v2["close"] - v2["open"])
+    es_bajista_pequena = v2["close"] < v2["open"] and cuerpo_v2 < cuerpo_v1 * 0.6
+    dentro_del_cuerpo = v2["open"] < v1["close"] and v2["close"] > v1["open"]
+
+    # 3. Confirmación: tercera vela cierra por debajo del mínimo de la segunda
+    confirmacion = v3["close"] < v2["low"]
+
+    if es_alcista_larga and es_bajista_pequena and dentro_del_cuerpo and confirmacion:
+        return "put"
+
+    return None    
+            
