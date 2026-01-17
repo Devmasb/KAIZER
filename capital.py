@@ -594,21 +594,138 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
 
                 elif detectar_harami_bajista(candles) == "put":
                                return asset_name, "call" 
-                if estado:
-                
-                    if direccion_macd == "call":
+
+                if direccion_macd == "call":
                                if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
                                    return asset_name, "call"
 
-                    elif direccion_macd == "put":
+                elif direccion_macd == "put":
 
                                if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
                                    return asset_name, "put"
-                                                               
-                        
+                if estado:
+                    
+                    return asset_name, direccion_macd
+                    
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
                 continue
+
+        print(f"❌ Ningún activo cumple condiciones con método {metodo_estructura}.")
+        return None, None
+
+    except Exception as e:
+        print(f"⚠️ Error general en find_best_asset: {e}")
+        return None, None
+
+         
+async def especialfind_best_asset(client, metodo_estructura="combinado", estado=True):
+    try:
+        codes_asset = await client.get_all_assets()
+        activos_ordenados = []
+
+        # Filtrar por payout y apertura
+        for asset_name in codes_asset.keys():
+            try:
+                asset_name, asset_data = await client.get_available_asset(asset_name, force_open=True)
+                if not asset_data or not asset_data[2]:
+                    continue
+                payout = client.get_payout_by_asset(asset_name)
+                if payout and isinstance(payout, (int, float)) and payout >= 91:
+                    activos_ordenados.append((asset_name, payout))
+            except Exception as e:
+                print(f"⚠️ Error en asset {asset_name}: {e}")
+                continue
+
+        activos_ordenados.sort(key=lambda x: x[1], reverse=True)
+
+        for asset_name, payout in activos_ordenados:
+            try:
+                candles = await client.get_candles(asset_name, int(time.time()), 50 * 60, 60)
+                if not candles or len(candles) < 2:
+                    continue
+
+                closes = [c['close'] for c in candles]
+                highs  = [c["high"] for c in candles]
+                lows   = [c["low"] for c in candles]
+                fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
+                pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)           
+
+                candle_prev = candles[-2]
+                candle_prev3 = candles[-3]
+                candle_actual = candles[-1]
+                apertura = candle_actual["open"]
+                cierre   = candle_actual["close"]
+
+                analyzer = TrendVolumeAnalyzer()
+                direccion_macd = await analyzer.get_macd_signal(client, asset_name, None, 60)
+                if direccion_macd not in ["call", "put"]:
+                    continue
+
+                estocastico = TechnicalIndicators.calculate_stochastic(closes, highs, lows, k_period=8, d_period=3)
+                if len(estocastico["k"]) < 2 or len(estocastico["d"]) < 2:
+                    continue
+ 
+                k_prev, d_prev = estocastico["k"][-2], estocastico["d"][-2]
+                k_actual, d_actual = estocastico["k"][-1], estocastico["d"][-1]
+                
+                direccionconteovelas = chequear_patron_tres_velas(candles[:-2])
+
+             
+                ##0.6 - 0.8 9 -12 operaciones            
+                if k_actual>k_prev and direccion_macd == "call" and direccionconteovelas== "call" and candle_prev['high'] > candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  candle_prev['close'] <= candle_prev3['close'] and  candle_prev['open'] <= candle_prev3['close']:
+                                           return asset_name, "call" 
+
+
+                elif  k_actual<k_prev  and direccion_macd == "put" and direccionconteovelas== "put" and candle_prev['low'] < candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  candle_prev['close'] >= candle_prev3['close'] and  candle_prev['open'] >= candle_prev3['close']:
+                                         return asset_name, "put"                         
+                  
+                ##0.8 5 -8 operaciones
+                if k_actual>=80  and k_prev>=80 and candle_prev['high'] > candle_prev3['high'] and  candle_prev['close'] <candle_prev3['high'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                           return asset_name, "put" 
+
+                elif  k_actual<=20  and k_prev<=20 and candle_prev['low'] < candle_prev3['low'] and  candle_prev['close'] > candle_prev3['low'] and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                         return asset_name, "call"      
+                ##0.7 3 -5 operaciones
+                if k_actual>=20 and k_prev<=20 and k_actual > d_actual and direccion_macd == "call" :
+                                           return asset_name, "call" 
+                                           
+
+                elif k_actual<=80 and k_prev>=80 and k_actual < d_actual and direccion_macd == "put" :
+                                           return asset_name, "put" 
+
+
+                # ##0.6 - 0.6 13-26 operaciones 
+                # if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
+                               
+                                # return asset_name, "call" 
+                                                               
+                # elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):                 
+                                # return asset_name, "put" 
+                          
+             
+                # ##0.5 - 0.6 51 operaciones  /////super buena, muchas operaciones
+                # if direccion_macd == "call" and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and not detectar_martillo_de_continuidad(candle_prev, "put")  :
+                               # return asset_name, "call" 
+
+
+                # elif direccion_macd == "put" and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and not detectar_martillo_de_continuidad(candle_prev, "call")  :
+                               # return asset_name, "put" 
+
+                                           
+                # ##0.5 - 0.6 23-27 operaciones             
+                # if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                            # return asset_name, "put" 
+
+
+                # elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                          # return asset_name, "call"  
+
+
+                              
+            except Exception as e:
+                    print(f"⚠️ Error analizando {asset_name}: {e}")
+                    continue
 
         print(f"❌ Ningún activo cumple condiciones con método {metodo_estructura}.")
         return None, None
