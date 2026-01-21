@@ -553,25 +553,6 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
 
                 elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
                               return asset_name, "call"  
-             
-                                                                 
-                if direccionconteovelas== "call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                               return asset_name, "call" 
-
-
-                elif  direccionconteovelas== "put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                             return asset_name, "put"  
-                             
-                if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
-                               
-                                return asset_name, "call" 
-                                             
-                               
-
-                elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):
-                             
-                                return asset_name, "put" 
-                          
 
                 if direccion_macd == "call" and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and not detectar_martillo_de_continuidad(candle_prev, "put")  :
                                return asset_name, "call" 
@@ -580,31 +561,48 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 elif direccion_macd == "put" and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and not detectar_martillo_de_continuidad(candle_prev, "call")  :
                                return asset_name, "put" 
 
-
-                if  k_actual > d_actual and k_prev < d_prev and direccion_macd=="call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                           return asset_name, "call" 
-
-
-                elif   k_actual < d_actual and k_prev > d_prev and  direccion_macd=="put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and  es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                                         return asset_name, "put"  
-
-
-                if detectar_harami_alcista(candles) == "call":
-                               return asset_name, "put" 
-
-                elif detectar_harami_bajista(candles) == "put":
-                               return asset_name, "call" 
-
-                if direccion_macd == "call":
-                               if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
-                                   return asset_name, "call"
-
-                elif direccion_macd == "put":
-
-                               if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
-                                   return asset_name, "put"
                 if estado:
-                    
+
+                    if detectar_harami_alcista(candles) == "call":
+                                   return asset_name, "put" 
+
+                    elif detectar_harami_bajista(candles) == "put":
+                                   return asset_name, "call" 
+
+                    if direccion_macd == "call":
+                                   if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
+                                       return asset_name, "call"
+
+                    elif direccion_macd == "put":
+
+                                   if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
+                                       return asset_name, "put"
+
+                
+                    if direccionconteovelas== "call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                   return asset_name, "call" 
+
+
+                    elif  direccionconteovelas== "put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                 return asset_name, "put"  
+                                 
+                    if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
+                                   
+                                    return asset_name, "call" 
+                                                                                 
+
+                    elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):
+                                 
+                                    return asset_name, "put"     
+
+
+                    if  k_actual > d_actual and k_prev < d_prev and direccion_macd=="call" and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                               return asset_name, "call" 
+
+
+                    elif   k_actual < d_actual and k_prev > d_prev and  direccion_macd=="put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and  es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                             return asset_name, "put"  
+                      
                     return asset_name, direccion_macd
                     
             except Exception as e:

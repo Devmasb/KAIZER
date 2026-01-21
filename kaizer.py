@@ -296,16 +296,19 @@ async def trade_loop():
 
             while True:
                 print("\n?? Buscando mejor activo para operar...")
+                mibalance = await client.get_balance()
                 #esperar_antes_de_cierre_vela(0)
                 asset_name, direction = await especialfind_best_asset(client, metodo_estructura="combinado", estado=estadofind)                   
                 if  asset_name and direction:
                     if profit_total < 0:
                         opex = abs(profit_total)* 1.05
                         opex = max(opex, unidad_base)
+                        esperar_antes_de_cierre_vela(0)
                         print('Trade especial')
                         balance, result, profit = await execute_trade( opex , asset_name, direction, duration)
                         
                     else:
+                        esperar_antes_de_cierre_vela(0)
                         print('Trade normal con deteccion especial')
                         balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
                 else:
