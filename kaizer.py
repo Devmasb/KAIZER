@@ -10,6 +10,10 @@ from estrategias.hibrida_martingala_orcar import estrategia_hibrida
 import time
 import logging
 import traceback
+import subprocess
+import os, json
+
+
 
 # 🔧 Configuración general
 
@@ -29,7 +33,7 @@ client = Quotex(
         password="Danydarien2020",
         lang="es"
     )
-
+    
 SIMULATED_RESULTS = [
     'P', 'P', 'P', 'G', 'G', 'G', 'P', 'G', 'P', 
     # ... puedes pegar aquí tu secuencia completa
@@ -224,6 +228,8 @@ async def trade_loop():
     MONTO_MAXIMO_OPERACION = 175.0
     MULTIPLICADOR_CIERRE = 1.3
     COEFICIENTE_ESCALA = 1.3
+    DETENER_EN_POSITIVO = False  # bandera que puedes activar/desactivar
+    RETOMAR_ESTADO = False
    
     with open("config.env") as f:
         for line in f:
@@ -231,6 +237,14 @@ async def trade_loop():
                 COEFICIENTE_ESCALA = float(line.strip().split("=")[1])
                 ESCALADO_FACTOR = COEFICIENTE_ESCALA 
                 MULTIPLICADOR_CIERRE = COEFICIENTE_ESCALA
+
+            if line.startswith("DETENER_EN_POSITIVO="):
+                valor = line.strip().split("=")[1].lower()
+                DETENER_EN_POSITIVO = True if valor == "true" else False
+
+            if line.startswith("RETOMAR_ESTADO="):
+                valor = line.strip().split("=")[1].lower()
+                RETOMAR_ESTADO = True if valor == "true" else False      
 
     print("Coeficiente Escala cargado:", COEFICIENTE_ESCALA)
     TAKE_PROFIT_TOTAL  = 2 * COEFICIENTE_ESCALA * (SECUENCIA_SESIONES[0] + SECUENCIA_SESIONES[-1])
@@ -271,7 +285,29 @@ async def trade_loop():
     incremento_base = 0.15
     sesiones_perdidas_consecutivas = 0  # contador de sesiones perdidas consecutivas
     operaciones_perdidas_consecutivas = 0  # contador de operaciones perdidas consecutivas
-    
+
+    if RETOMAR_ESTADO and os.path.exists("estado.json"):
+        with open("estado.json") as f:
+            estado = json.load(f)
+        sesion_actual = estado["sesion_actual"]
+        SECUENCIA_SESIONES = estado["SECUENCIA_SESIONES"]
+        COEFICIENTE_ESCALA = estado["COEFICIENTE_ESCALA"]
+        profit_total = estado["profit_total"]
+        perdida_acumulada_sesion = estado["perdida_acumulada_sesion"]
+        operaciones_perdidas_consecutivas = estado["operaciones_perdidas_consecutivas"]
+        stats = estado["stats"]
+        print("🔄 Estado restaurado desde archivo, retomando operación...")
+        enviar_nota_telegram(f"🔄 Estado restaurado desde archivo, retomando operación...")
+    else:
+        sesion_actual = 1
+        profit_total = 0
+        perdida_acumulada_sesion = 0
+        operaciones_perdidas_consecutivas = 0
+        stats = {"ganadas":0,"perdidas":0,"doji":0,"errores":0,"sesiones_realizadas":0,"sesiones_finalizadas":0}
+        print("🆕 Inicio limpio, sin restaurar estado.")
+
+
+        
     # nivel de sesiones ***********************************
     while len(SECUENCIA_SESIONES) > 0: 
         print(f"\n?? Iniciando sesión {sesion_actual}...")
@@ -300,7 +336,7 @@ async def trade_loop():
                 #esperar_antes_de_cierre_vela(0)
                 asset_name, direction = await especialfind_best_asset(client, metodo_estructura="combinado", estado=estadofind)                   
                 if  asset_name and direction:
-                    if profit_total < 0:
+                    if profit_total < 0 and nume_escalamientos < 1:
                         opex = abs(profit_total)* 1.05
                         opex = max(opex, unidad_base)
                         esperar_antes_de_cierre_vela(0)
@@ -338,6 +374,20 @@ async def trade_loop():
                 "monto": monto_operacion,
                 "profit": profit
             })
+            
+            estado = {
+                "sesion_actual": sesion_actual,
+                "SECUENCIA_SESIONES": SECUENCIA_SESIONES,
+                "COEFICIENTE_ESCALA": COEFICIENTE_ESCALA,
+                "profit_total": profit_total,
+                "perdida_acumulada_sesion": perdida_acumulada_sesion,
+                "operaciones_perdidas_consecutivas": operaciones_perdidas_consecutivas,
+                "stats": stats
+            }
+
+            with open("estado.json", "w") as f:
+                json.dump(estado, f)
+                       
 
             resultados.append("G" if result == "Win" else "P")
             ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
@@ -399,7 +449,52 @@ async def trade_loop():
                 "recuperacion_neta": recuperacion_neta,
                 "stats": stats
                 }
-            
+
+
+            if DETENER_EN_POSITIVO and profit_total >= -unidad_base:
+                print(f"\n❌ Bandera DETENER_EN_POSITIVO activada y sesión cerrada en ganancia. Bot detenido de forma segura.")
+                enviar_nota_telegram("Bandera DETENER_EN_POSITIVO activada y sesión cerrada en ganancia. Bot detenido de forma segura.")
+
+                # 1. Ejecutar systemctl stop
+                try:
+                    resultado = subprocess.run(
+                        ["sudo", "systemctl", "stop", "kaizer"],
+                        capture_output=True,
+                        text=True
+                    )
+                    print("🔧 Servicio detenido con systemctl:", resultado.stdout)
+                except Exception as e:
+                    print("⚠️ Error al detener servicio con systemctl:", e)
+
+                # 2. Reescribir config.env para resetear la bandera
+                try:
+                    with open("config.env") as f:
+                        lineas = f.readlines()
+                    with open("config.env", "w") as f:
+                        for linea in lineas:
+                            if linea.startswith("DETENER_EN_POSITIVO="):
+                                f.write("DETENER_EN_POSITIVO=false\n")
+                            else:
+                                f.write(linea)
+                    print("📄 Configuración actualizada: DETENER_EN_POSITIVO=false")
+                    enviar_nota_telegram("DETENER_EN_POSITIVO reiniciado a FALSE en config.env")
+                except Exception as e:
+                    print("⚠️ Error al actualizar config.env:", e)
+
+                # 3. Calcular totales antes de salir
+                ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
+                perdida_total = sum(op["monto"] for op in registro_operaciones if op["resultado"] == "Loss")
+                recuperacion_neta = ganancia_total - perdida_total
+
+                return {
+                    "estado": "finalizado",
+                    "balance_final": balance,
+                    "ganancia_total": ganancia_total,
+                    "perdida_total": perdida_total,
+                    "recuperacion_neta": recuperacion_neta,
+                    "stats": stats
+                }
+                
             if saldo_sesion >= take_profit_sesion:
                 print(f"\n?? Take Profit alcanzado en sesión {sesion_actual} (+${saldo_sesion:.2f}).")
                 if len(SECUENCIA_SESIONES) > 1:
@@ -430,6 +525,12 @@ async def trade_loop():
         else:
             sesiones_perdidas_consecutivas = 0
             perdida_acumulada_sesion = max(perdida_acumulada_sesion - saldo_sesion, 0)
+        
+        with open("config.env") as f:
+            for line in f:
+                if line.startswith("DETENER_EN_POSITIVO="):
+                     valor = line.strip().split("=")[1].lower()
+                     DETENER_EN_POSITIVO = True if valor == "true" else False
 
         # ?? Escalón superior: dos sesiones perdidas consecutivas
         if sesiones_perdidas_consecutivas >= 2:
@@ -465,7 +566,7 @@ async def trade_loop():
             continue
         sesion_actual += 1
         # ?? Normalización progresiva del coeficiente (reduce 40%) SOLO al finalizar toda la secuencia
-        if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > 1.3:
+        if len(SECUENCIA_SESIONES) == 0 and COEFICIENTE_ESCALA > ESCALADO_FACTOR:
             temp = COEFICIENTE_ESCALA
             COEFICIENTE_ESCALA = max(ESCALADO_FACTOR, COEFICIENTE_ESCALA * 0.9) if perdida_acumulada_sesion > 0 else ESCALADO_FACTOR
             margenganancia = abs(recuperacion_neta)*2/11
