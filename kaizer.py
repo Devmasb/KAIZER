@@ -295,6 +295,7 @@ async def trade_loop():
         profit_total = estado["profit_total"]
         perdida_acumulada_sesion = estado["perdida_acumulada_sesion"]
         operaciones_perdidas_consecutivas = estado["operaciones_perdidas_consecutivas"]
+        registro_operaciones = estado["registro_operaciones"]
         stats = estado["stats"]
         print("🔄 Estado restaurado desde archivo, retomando operación...")
         enviar_nota_telegram(f"🔄 Estado restaurado desde archivo, retomando operación...")
@@ -382,6 +383,7 @@ async def trade_loop():
                 "profit_total": profit_total,
                 "perdida_acumulada_sesion": perdida_acumulada_sesion,
                 "operaciones_perdidas_consecutivas": operaciones_perdidas_consecutivas,
+                "registro_operaciones":registro_operaciones,
                 "stats": stats
             }
 
