@@ -335,28 +335,14 @@ async def trade_loop():
                 print("\n?? Buscando mejor activo para operar...")
                 mibalance = await client.get_balance()
                 #esperar_antes_de_cierre_vela(0)
-                asset_name, direction = await especialfind_best_asset(client, metodo_estructura="combinado", estado=estadofind)                   
-                if  asset_name and direction:
-                    if profit_total < 0 and nume_escalamientos < 1:
-                        opex = abs(profit_total)* 1.05
-                        opex = max(opex, unidad_base)
-                        esperar_antes_de_cierre_vela(0)
-                        print('Trade especial')
-                        balance, result, profit = await execute_trade( opex , asset_name, direction, duration)
-                        
-                    else:
-                        esperar_antes_de_cierre_vela(0)
-                        print('Trade normal con deteccion especial')
-                        balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
-                else:
-                    asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
-                    if not asset_name or not direction:
-                        print("? No se encontró activo válido. Reintentando en 60 segundos...")
-                        #await asyncio.sleep(10)
-                        continue
-                    esperar_antes_de_cierre_vela(0)
-                    print('Trade normal')
-                    balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
+                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
+                if not asset_name or not direction:
+                    print("? No se encontró activo válido. Reintentando en 60 segundos...")
+                    #await asyncio.sleep(10)
+                    continue
+                esperar_antes_de_cierre_vela(0)
+                print('Trade normal')
+                balance, result, profit = await execute_trade(monto_operacion, asset_name, direction, duration)
 
                 if result in ["Doji", "Failed"]:
                     print(f"?? Operación inválida ({result}). Reintentando con nuevo activo y mismo monto...")
