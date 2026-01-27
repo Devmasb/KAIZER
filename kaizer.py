@@ -531,7 +531,7 @@ async def trade_loop():
 
             SECUENCIA_SESIONES = [0.6, 1, 0.6, 1]  # reinicia secuencia
             COEFICIENTE_ESCALA *= (1+ nume_escalamientos * incremento_base)  
-            margenganancia = abs(recuperacion_neta)*2/11
+            margenganancia = abs(recuperacion_neta)*2/3
             peso_coef = 0.8
             peso_margen = 0.2
             COEFICIENTE_ESCALA = (
