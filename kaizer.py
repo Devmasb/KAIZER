@@ -335,7 +335,7 @@ async def trade_loop():
                 print("\n?? Buscando mejor activo para operar...")
                 mibalance = await client.get_balance()
                 #esperar_antes_de_cierre_vela(0)
-                asset_name, direction = await especialfind_best_asset(client, metodo_estructura="combinado", estado=estadofind)
+                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     #await asyncio.sleep(10)

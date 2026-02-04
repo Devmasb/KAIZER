@@ -593,12 +593,12 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                                          return asset_name, "put"  
 
                 if direccion_macd == "call":
-                               if confirmar_rupturacruce(candle_actual, fractales_alcistas, "call", 0):
+                               if cierre > apertura > confirmar_rupturacruce(candle_prev,resistencias , "call", 0) > 0 :
                                    return asset_name, "call"
 
                 elif direccion_macd == "put":
 
-                               if confirmar_rupturacruce(candle_actual, fractales_bajistas, "put", 0):
+                               if cierre < apertura < confirmar_rupturacruce(candle_prev, soportes, "put", 0) > 0  :
                                    return asset_name, "put"
                 if estado:
 
@@ -693,31 +693,31 @@ async def especialfind_best_asset(client, metodo_estructura="combinado", estado=
                                            return asset_name, "put" 
 
 
-                ##0.6 - 0.6 13-26 operaciones 
-                if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
+                # ##0.6 - 0.6 13-26 operaciones 
+                # if  k_actual>=90  and d_actual>=80 and k_actual > d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd) :
                                
-                                return asset_name, "call" 
+                                # return asset_name, "call" 
                                                                
-                elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):                 
-                                return asset_name, "put" 
+                # elif  k_actual<=10  and d_actual<=20 and k_actual < d_actual and detectar_martillo_de_continuidad(candle_actual, direccion_macd) and es_retroceso_controlado(candle_prev, candle_actual, direccion_macd):                 
+                                # return asset_name, "put" 
                           
              
-                ##0.5 - 0.6 51 operaciones  /////super buena, muchas operaciones
-                if direccion_macd == "call" and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and not detectar_martillo_de_continuidad(candle_prev, "put")  :
-                               return asset_name, "call" 
+                # ##0.5 - 0.6 51 operaciones  /////super buena, muchas operaciones
+                # if direccion_macd == "call" and es_envolvente_de_continuidad(candle_prev, candle_actual, "call") and  es_retroceso_controlado(candle_prev3, candle_prev, "call") and not detectar_martillo_de_continuidad(candle_prev, "put")  :
+                               # return asset_name, "call" 
 
 
-                elif direccion_macd == "put" and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and not detectar_martillo_de_continuidad(candle_prev, "call")  :
-                               return asset_name, "put" 
+                # elif direccion_macd == "put" and es_envolvente_de_continuidad(candle_prev, candle_actual, "put") and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and not detectar_martillo_de_continuidad(candle_prev, "call")  :
+                               # return asset_name, "put" 
 
                                            
-                ##0.5 - 0.6 23-27 operaciones             
-                if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
-                                            return asset_name, "put" 
+                # ##0.5 - 0.6 23-27 operaciones             
+                # if k_actual>=80  and k_prev>=80 and k_actual < d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
+                                            # return asset_name, "put" 
 
 
-                elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
-                                          return asset_name, "call"  
+                # elif  k_actual<=20  and k_prev<=20 and k_actual > d_actual and es_envolvente_de_continuidad(candle_prev, candle_actual, "call"):
+                                          # return asset_name, "call"  
 
 
                               
