@@ -230,6 +230,7 @@ async def trade_loop():
     COEFICIENTE_ESCALA = 1.3
     DETENER_EN_POSITIVO = False  # bandera que puedes activar/desactivar
     RETOMAR_ESTADO = False
+    MARTINGALA_ACTIVA = False
    
     with open("config.env") as f:
         for line in f:
@@ -390,13 +391,33 @@ async def trade_loop():
                 #monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
+                MARTINGALA_ACTIVA = False      # desactiva martingala tras ganar
+
             elif result == "Loss":
                 operaciones_perdidas_consecutivas += 1
                 stats["perdidas"] += 1
                 saldo_sesion -= monto_operacion
-                monto_operacion = unidad_base
                 perdida_acumulada += monto_operacion
-                #monto_operacion *= ESCALADO_FACTOR_GLOBAL
+                
+                if operaciones_perdidas_consecutivas >= 4:
+                    MARTINGALA_ACTIVA = True
+
+                if MARTINGALA_ACTIVA:
+                    aux_monto = max(abs(perdida_acumulada_sesion), unidad_base) if perdida_acumulada_sesion < 0 else max(abs(saldo_sesion), unidad_base) 
+                    if operaciones_perdidas_consecutivas == 4:
+                        # primera martingala suavizada
+                        monto_operacion = round(aux_monto * 1.10, 2)
+                    elif operaciones_perdidas_consecutivas > 4:
+                        # segunda martingala fuerte
+                        monto_operacion = round(aux_monto * 2.05, 2)
+                    # else:
+                        # # si llega a la sexta pérdida, cerrar sesión
+                        # print(f"\n❌ Martingala fallida, sesión {sesion_actual} cerrada como perdedora.")
+                        # SECUENCIA_SESIONES.append(int(take_profit_sesion / COEFICIENTE_ESCALA))
+                        # break  # salir del bucle de operaciones → sesión perdida
+                else:
+                    monto_operacion = unidad_base
+                           
                 monto_operacion = min(monto_operacion, MONTO_MAXIMO_OPERACION)
                 estadofind = False 
 
@@ -414,6 +435,13 @@ async def trade_loop():
                 ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
                 perdida_total = sum(op["monto"] for op in registro_operaciones if op["resultado"] == "Loss")
                 recuperacion_neta = ganancia_total - perdida_total
+                print("\n📋 RESUMEN FINAL DE LA SESIÓN")
+                print(f"📌 Sesiones realizadas: {stats['sesiones_realizadas']}")
+                print(f"✅ Ganadas: {stats['ganadas']} | ❌ Perdidas: {stats['perdidas']} | Doji: {stats['doji']}")
+                print(f"Profit total: ${profit_total:.2f}")
+                print(f"📈 Ganancia total: ${ganancia_total:.2f} | Pérdida total: ${perdida_total:.2f}")
+                print(f"💰 Recuperación neta: ${recuperacion_neta:.2f}")
+                print(f"📈 Balance final: ${balance:.2f}")
                 return {
                 "estado": "finalizado",
                 "balance_final": balance,
@@ -429,6 +457,13 @@ async def trade_loop():
                 ganancia_total = sum(op["profit"] for op in registro_operaciones if op["resultado"] == "Win")
                 perdida_total = sum(op["monto"] for op in registro_operaciones if op["resultado"] == "Loss")
                 recuperacion_neta = ganancia_total - perdida_total
+                print("\n📋 RESUMEN FINAL DE LA SESIÓN")
+                print(f"📌 Sesiones realizadas: {stats['sesiones_realizadas']}")
+                print(f"✅ Ganadas: {stats['ganadas']} | ❌ Perdidas: {stats['perdidas']} | Doji: {stats['doji']}")
+                print(f"Profit total: ${profit_total:.2f}")
+                print(f"📈 Ganancia total: ${ganancia_total:.2f} | Pérdida total: ${perdida_total:.2f}")
+                print(f"💰 Recuperación neta: ${recuperacion_neta:.2f}")
+                print(f"📈 Balance final: ${balance:.2f}")              
                 return {
                 "estado": "finalizado",
                 "balance_final": balance,

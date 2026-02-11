@@ -523,7 +523,23 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 
                 direccionconteovelas = chequear_patron_tres_velas(candles[:-2])
 
-           
+ 
+                fractales_alcistas, fractales_bajistas = detectar_fractales(candles)
+                pivotes_resistencias, pivotes_soportes = detectar_pivotes(candles)
+
+                if metodo_estructura == "fractales":
+                    soportes = fractales_alcistas
+                    resistencias = fractales_bajistas
+                elif metodo_estructura == "pivote":
+                    soportes = pivotes_soportes
+                    resistencias = pivotes_resistencias
+                elif metodo_estructura == "combinado":
+                    soportes = intersectar_niveles(fractales_alcistas, pivotes_soportes)
+                    resistencias = intersectar_niveles(fractales_bajistas, pivotes_resistencias)
+                else:
+                    print(f"⚠️ Método de estructura desconocido: {metodo_estructura}")
+                    continue
+                  
                 if k_actual>=20 and k_prev<=20 and k_actual > d_actual and direccion_macd == "call" :
                                return asset_name, "call" 
                                
