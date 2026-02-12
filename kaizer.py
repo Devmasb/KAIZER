@@ -387,7 +387,7 @@ async def trade_loop():
                 saldo_sesion += profit
                 perdida_acumulada = max(perdida_acumulada - profit, 0)
                 #monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base)
-                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0  else unidad_base
+                monto_operacion = max(monto_operacion * ESCALADO_FACTOR_GLOBAL, unidad_base) if saldo_sesion >= 0 and MARTINGALA_ACTIVA == False  else unidad_base
                 #monto_operacion = max(monto_operacion / ESCALADO_FACTOR_GLOBAL, unidad_base)
                 estadofind = True
                 operaciones_perdidas_consecutivas = 0
@@ -403,11 +403,11 @@ async def trade_loop():
                     MARTINGALA_ACTIVA = True
 
                 if MARTINGALA_ACTIVA:
-                    aux_monto = max(abs(perdida_acumulada_sesion), unidad_base) if perdida_acumulada_sesion < 0 else max(abs(saldo_sesion), unidad_base) 
+                    aux_monto = max(abs(perdida_acumulada_sesion), unidad_base) if perdida_acumulada_sesion > 0 else max(abs(saldo_sesion), unidad_base) 
                     if operaciones_perdidas_consecutivas == 4:
                         # primera martingala suavizada
                         monto_operacion = round(aux_monto * 1.10, 2)
-                    elif operaciones_perdidas_consecutivas > 4:
+                    else:
                         # segunda martingala fuerte
                         monto_operacion = round(aux_monto * 2.05, 2)
                     # else:
