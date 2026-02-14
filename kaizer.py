@@ -399,17 +399,17 @@ async def trade_loop():
                 saldo_sesion -= monto_operacion
                 perdida_acumulada += monto_operacion
                 
-                if operaciones_perdidas_consecutivas >= 4:
+                if operaciones_perdidas_consecutivas >= 2:
                     MARTINGALA_ACTIVA = True
 
                 if MARTINGALA_ACTIVA:
                     aux_monto = max(abs(perdida_acumulada_sesion), unidad_base) if perdida_acumulada_sesion > 0 else max(abs(saldo_sesion), unidad_base) 
-                    if operaciones_perdidas_consecutivas == 4:
+                    if operaciones_perdidas_consecutivas == 2:
                         # primera martingala suavizada
                         monto_operacion = round(aux_monto * 1.10, 2)
                     else:
                         # segunda martingala fuerte
-                        monto_operacion = round(aux_monto * 2.05, 2)
+                        monto_operacion = round(aux_monto * 1.25, 2)
                     # else:
                         # # si llega a la sexta pérdida, cerrar sesión
                         # print(f"\n❌ Martingala fallida, sesión {sesion_actual} cerrada como perdedora.")
