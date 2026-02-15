@@ -471,7 +471,7 @@ def chequear_patron_tres_velas(candles):
     else:
         return None
         
-async def find_best_asset(client, metodo_estructura="combinado", estado=True):
+async def find_best_asset(client, metodo_estructura="combinado", estado=0.5):
     try:
         codes_asset = await client.get_all_assets()
         activos_ordenados = []
@@ -608,18 +608,19 @@ async def find_best_asset(client, metodo_estructura="combinado", estado=True):
                 elif   k_actual < d_actual and k_prev > d_prev and  direccion_macd=="put" and  es_retroceso_controlado(candle_prev3, candle_prev, "put") and  es_envolvente_de_continuidad(candle_prev, candle_actual, "put"):
                                          return asset_name, "put"  
 
-                if direccion_macd == "call":
-                               if cierre > apertura > confirmar_rupturacruce(candle_prev,resistencias , "call", 0) > 0 :
-                                   return asset_name, "call"
+                if estado >= 0.40:
+                
+                    if direccion_macd == "call":
+                                   if cierre > apertura > confirmar_rupturacruce(candle_prev,resistencias , "call", 0) > 0 :
+                                       return asset_name, "call"
 
-                elif direccion_macd == "put":
+                    elif direccion_macd == "put":
 
-                               if cierre < apertura < confirmar_rupturacruce(candle_prev, soportes, "put", 0) > 0  :
-                                   return asset_name, "put"
-                if estado:
-
-                                      
-                    return asset_name, direccion_macd
+                                   if cierre < apertura < confirmar_rupturacruce(candle_prev, soportes, "put", 0) > 0  :
+                                       return asset_name, "put"
+                                       
+                if estado >= 0.46:
+                   return asset_name, direccion_macd
                     
             except Exception as e:
                 print(f"⚠️ Error analizando {asset_name}: {e}")
