@@ -450,7 +450,7 @@ class QuotexAPI(object):
 
         self.is_logged = True
         
-        
+            
     async def start_websocket(self):
         global_value.check_websocket_if_connect = None
         global_value.check_websocket_if_error = False
@@ -467,7 +467,15 @@ class QuotexAPI(object):
         user_agent = self.session_data.get("user_agent")
 
         if cookies:
-            headers["Cookie"] = cookies
+            try:
+                # Si cookies es un JSON de Playwright, convertirlo a formato header
+                cookies_list = json.loads(cookies)
+                cookie_str = "; ".join([f"{c['name']}={c['value']}" for c in cookies_list])
+                headers["Cookie"] = cookie_str
+            except Exception:
+                # Si ya es string, usarlo directamente
+                headers["Cookie"] = cookies
+
         if user_agent:
             headers["User-Agent"] = user_agent
 
