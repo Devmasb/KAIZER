@@ -260,7 +260,7 @@ async def trade_loop():
         user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36",
         cookies=json.dumps(cookies)
     )
-    asyncio.create_task(refresh_cookies_periodically(client.set_session, interval=1800))       
+    #asyncio.create_task(refresh_cookies_periodically(client.set_session, interval=1800))       
     #client.set_account_mode("REAL")
     conectado, mensaje = await client.connect()
     if not conectado:
