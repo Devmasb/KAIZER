@@ -1,5 +1,0 @@
-pycurl
-certifi
-colorama
-termcolor
-playwright

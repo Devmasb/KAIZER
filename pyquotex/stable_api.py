@@ -213,7 +213,7 @@ class Quotex:
         new_candles = merge_candles(candles_v2_data)
 
         return new_candles
-        
+
     async def connect(self):
         self.api = QuotexAPI(
             "qxbroker.com",
@@ -234,13 +234,10 @@ class Quotex:
             await self.api.authenticate()
 
         check, reason = await self.api.connect(self.account_is_demo)
-        print (check, reason)
 
         if not await self.check_connect():
             logger.debug("Reconnecting on websocket")
-            # 🔹 en vez de recursión infinita
-            await self.api.reconnect()
-            return False, "Websocket reconnection attempted"
+            return await self.connect()
 
         return check, reason
 
@@ -271,15 +268,14 @@ class Quotex:
         while self.api.training_balance_edit_request is None:
             await asyncio.sleep(0.2)
         return self.api.training_balance_edit_request
-        
+
     async def get_balance(self):
-        for _ in range(50):  # espera máximo 10 segundos
-            if self.api.account_balance is not None:
-                balance = self.api.account_balance.get("demoBalance") \
-                    if self.api.account_type > 0 else self.api.account_balance.get("liveBalance")
-                return float(f"{truncate(balance + self.get_profit(), 2):.2f}")
+        while self.api.account_balance is None:
             await asyncio.sleep(0.2)
-        return 0.0  # 🔹 fallback si no llega nada
+        balance = self.api.account_balance.get("demoBalance") \
+            if self.api.account_type > 0 else self.api.account_balance.get("liveBalance")
+        return float(f"{truncate(balance + self.get_profit(), 2):.2f}")
+
     # Agregar al archivo stable_api.py dentro de la clase Quotex
 
     async def calculate_indicator(

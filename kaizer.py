@@ -33,7 +33,7 @@ client = Quotex(
         password="Danydarien2020",
         lang="es"
     )
-    
+ 
 SIMULATED_RESULTS = [
     'P', 'P', 'P', 'G', 'G', 'G', 'P', 'G', 'P', 
     # ... puedes pegar aquí tu secuencia completa
@@ -129,7 +129,7 @@ async def verificar_historial(client, asset, amount, direction):
 import requests
 
 def enviar_resumen_telegram(stats, balance_final, ganancia_total, perdida_total, recuperacion_neta):
-    TOKEN = "8218293709:AAHhtbiAsVtG3HHflIunyzgv5q2uP41F5DI"
+    TOKEN = "8521226656:AAGS8w4ndnal_NA2olkpwKkIzpWisDWY2TA"
     CHAT_ID = "1155988084"
 
     mensaje = (
@@ -160,7 +160,7 @@ def enviar_resumen_telegram(stats, balance_final, ganancia_total, perdida_total,
 # 📈 Ejecución de operación con verificación segura
 
 def enviar_nota_telegram(notaabot):
-    TOKEN = "8218293709:AAHhtbiAsVtG3HHflIunyzgv5q2uP41F5DI"
+    TOKEN = "8521226656:AAGS8w4ndnal_NA2olkpwKkIzpWisDWY2TA"
     CHAT_ID = "1155988084"
 
     mensaje = notaabot
@@ -169,7 +169,7 @@ def enviar_nota_telegram(notaabot):
     payload = {
         "chat_id": CHAT_ID,
         "text": mensaje,
-        "parse_mode": None
+        "parse_mode": "Markdown"
     }
 
     try:
@@ -336,7 +336,7 @@ async def trade_loop():
                 print("\n?? Buscando mejor activo para operar...")
                 mibalance = await client.get_balance()
                 #esperar_antes_de_cierre_vela(0)
-                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
+                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=rendimiento)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     #await asyncio.sleep(10)
@@ -427,7 +427,7 @@ async def trade_loop():
             print(f"?? Profit acumulado: {profit_total:.2f}")
             print(f"?? Saldo sesión: {saldo_sesion:.2f}")
             totales = stats["ganadas"] + stats["perdidas"]
-            #rendimiento = stats["ganadas"] /totales
+            rendimiento = stats["ganadas"] /totales if totales > 0 else 0.5
             
             if profit_total >= TAKE_PROFIT_TOTAL:
                 print(f"\n✅ Objetivo global alcanzado: Profit total {profit_total:.2f} ≥ {TAKE_PROFIT_TOTAL:.2f}. Deteniendo bot.")
@@ -631,29 +631,18 @@ async def trade_loop():
     }
 # ?? Entrada principal
 async def main():
-    resultado = {
-        "estado": "error",
-        "balance_final": 0.0,
-        "ganancia_total": 0.0,
-        "perdida_total": 0.0,
-        "recuperacion_neta": 0.0,
-        "stats": {
-            "ganadas": 0,
-            "perdidas": 0,
-            "doji": 0,
-            "errores": 0
-        }
-    }
-
+    
     try:
         resultado = await trade_loop()
         await client.close()
     except Exception as e:
         error_msg = f"⚠️ Error en main: {e}\n{traceback.format_exc()}"
         enviar_nota_telegram(error_msg)
-        
-        
-    print("\n📋 RESUMEN FINAL DE EJECUCIÓN")
+        # Opcional: esperar unos segundos antes de reiniciar
+        # time.sleep(10)
+
+
+    # print("\n📋 RESUMEN FINAL DE EJECUCIÓN")
     # print("────────────────────────────────────────────")
     # print(f"📌 Estado: {resultado['estado'].upper()}")
     # print(f"💰 Saldo final: {resultado['balance_final']:.2f}")
