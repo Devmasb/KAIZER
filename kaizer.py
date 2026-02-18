@@ -336,7 +336,7 @@ async def trade_loop():
                 print("\n?? Buscando mejor activo para operar...")
                 mibalance = await client.get_balance()
                 #esperar_antes_de_cierre_vela(0)
-                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=rendimiento)
+                asset_name, direction = await find_best_asset(client, metodo_estructura="combinado", estado=estadofind)
                 if not asset_name or not direction:
                     print("? No se encontró activo válido. Reintentando en 60 segundos...")
                     #await asyncio.sleep(10)
@@ -427,7 +427,7 @@ async def trade_loop():
             print(f"?? Profit acumulado: {profit_total:.2f}")
             print(f"?? Saldo sesión: {saldo_sesion:.2f}")
             totales = stats["ganadas"] + stats["perdidas"]
-            rendimiento = stats["ganadas"] /totales if totales > 0 else 0.5
+            #rendimiento = stats["ganadas"] /totales
             
             if profit_total >= TAKE_PROFIT_TOTAL:
                 print(f"\n✅ Objetivo global alcanzado: Profit total {profit_total:.2f} ≥ {TAKE_PROFIT_TOTAL:.2f}. Deteniendo bot.")
