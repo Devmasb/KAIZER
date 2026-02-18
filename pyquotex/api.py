@@ -27,7 +27,6 @@ from .ws.objects.profile import Profile
 from .ws.objects.listinfodata import ListInfoData
 from .ws.client import WebsocketClient
 from collections import defaultdict
-from playwright.async_api import async_playwright
 
 urllib3.disable_warnings()
 logger = logging.getLogger(__name__)
@@ -451,57 +450,49 @@ class QuotexAPI(object):
 
         self.is_logged = True
 
-
-
     async def start_websocket(self):
         global_value.check_websocket_if_connect = None
         global_value.check_websocket_if_error = False
         global_value.websocket_error_reason = None
-
         if not global_value.SSID:
             await self.authenticate()
-
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-setuid-sandbox",
-                    "--disable-blink-features=AutomationControlled"
-                ]
-            )
-            context = await browser.new_context(user_agent=self.session_data.get("user_agent"))
-
-            # Inyectar cookies válidas
-            cookies = self.session_data.get("cookies")
-            if cookies:
-                try:
-                    cookies_list = json.loads(cookies)
-                    await context.add_cookies(cookies_list)
-                except Exception:
-                    pass
-
-            page = await context.new_page()
-
-            # Exponer callback Python para recibir mensajes
-            async def notify_backend(event, message):
-                # Aquí reinyectas los mensajes a tu lógica existente
-                print(f"[{event}] {message}")
-                # Puedes llamar a self.send_websocket_request(message) si quieres mantener compatibilidad
-            await page.expose_function("notifyBackend", notify_backend)
-
-            # Inyectar wsHook.js
-            with open("wsHook.js", "r") as f:
-                ws_hook_script = f.read()
-            await page.add_init_script(ws_hook_script)
-
-            # Abrir la página de trading (esto dispara el WebSocket)
-            await page.goto("https://qxbroker.com/en/demo-trade", timeout=60000)
-
-            logger.debug("Websocket conectado via navegador headless con wsHook.js")
-            global_value.check_websocket_if_connect = 1
-            return True, "Websocket connected successfully!!!"
+        self.websocket_client = WebsocketClient(self)
+        payload = {
+            "suppress_origin": True,    # CloudFlare handshake status 403 forbidden fix
+            "ping_interval": 24,
+            "ping_timeout": 20,
+            "ping_payload": "2",
+            "origin": self.https_url,
+            "host": f"ws2.{self.host}",
+            "sslopt": {
+                "check_hostname": False,
+                "cert_reqs": ssl.CERT_NONE,
+                "ca_certs": cacert,
+                "context": ssl_context
+            },
+            "reconnect": 5
+        }
+        if platform.system() == "Linux":
+            payload["sslopt"]["ssl_version"] = ssl.PROTOCOL_TLS
+        self.websocket_thread = threading.Thread(
+            target=self.websocket.run_forever,
+            kwargs=payload
+        )
+        self.websocket_thread.daemon = True
+        self.websocket_thread.start()
+        while True:
+            if global_value.check_websocket_if_error:
+                return False, global_value.websocket_error_reason
+            elif global_value.check_websocket_if_connect == 0:
+                logger.debug("Websocket connection closed.")
+                return False, "Websocket connection closed."
+            elif global_value.check_websocket_if_connect == 1:
+                logger.debug("Websocket connected successfully!!!")
+                return True, "Websocket connected successfully!!!"
+            elif global_value.check_rejected_connection == 1:
+                global_value.SSID = None
+                logger.debug("Websocket Token Rejected.")
+                return True, "Websocket Token Rejected."
 
     def send_ssid(self, timeout=10):
         self.wss_message = None

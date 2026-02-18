@@ -169,7 +169,7 @@ def enviar_nota_telegram(notaabot):
     payload = {
         "chat_id": CHAT_ID,
         "text": mensaje,
-        "parse_mode": "Markdown"
+        "parse_mode": None
     }
 
     try:
@@ -631,30 +631,41 @@ async def trade_loop():
     }
 # ?? Entrada principal
 async def main():
-    
+    resultado = {
+        "estado": "error",
+        "balance_final": 0.0,
+        "ganancia_total": 0.0,
+        "perdida_total": 0.0,
+        "recuperacion_neta": 0.0,
+        "stats": {
+            "ganadas": 0,
+            "perdidas": 0,
+            "doji": 0,
+            "errores": 0
+        }
+    }
+
     try:
         resultado = await trade_loop()
         await client.close()
     except Exception as e:
         error_msg = f"⚠️ Error en main: {e}\n{traceback.format_exc()}"
         enviar_nota_telegram(error_msg)
-        # Opcional: esperar unos segundos antes de reiniciar
-        # time.sleep(10)
-
-
+        
+        
     print("\n📋 RESUMEN FINAL DE EJECUCIÓN")
-    print("────────────────────────────────────────────")
-    print(f"📌 Estado: {resultado['estado'].upper()}")
-    print(f"💰 Saldo final: {resultado['balance_final']:.2f}")
-    print(f"📈 Ganancia total acumulada: {resultado['ganancia_total']:.2f}")
-    print(f"📉 Pérdida total acumulada: {resultado['perdida_total']:.2f}")
-    print(f"🔁 Recuperación neta: {resultado['recuperacion_neta']:.2f}")
-    print("────────────────────────────────────────────")
-    print(f"✅ Operaciones ganadas: {resultado['stats']['ganadas']}")
-    print(f"❌ Operaciones perdidas: {resultado['stats']['perdidas']}")
-    print(f"⚪ Doji: {resultado['stats']['doji']}")
-    print(f"💥 Errores: {resultado['stats']['errores']}")
-    print("────────────────────────────────────────────")
+    # print("────────────────────────────────────────────")
+    # print(f"📌 Estado: {resultado['estado'].upper()}")
+    # print(f"💰 Saldo final: {resultado['balance_final']:.2f}")
+    # print(f"📈 Ganancia total acumulada: {resultado['ganancia_total']:.2f}")
+    # print(f"📉 Pérdida total acumulada: {resultado['perdida_total']:.2f}")
+    # print(f"🔁 Recuperación neta: {resultado['recuperacion_neta']:.2f}")
+    # print("────────────────────────────────────────────")
+    # print(f"✅ Operaciones ganadas: {resultado['stats']['ganadas']}")
+    # print(f"❌ Operaciones perdidas: {resultado['stats']['perdidas']}")
+    # print(f"⚪ Doji: {resultado['stats']['doji']}")
+    # print(f"💥 Errores: {resultado['stats']['errores']}")
+    # print("────────────────────────────────────────────")
 
     input("\nPresiona Enter para cerrar la consola...")
 
