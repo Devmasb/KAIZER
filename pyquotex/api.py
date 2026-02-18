@@ -449,16 +449,30 @@ class QuotexAPI(object):
         global_value.SSID = self.session_data.get("token")
 
         self.is_logged = True
-
+        
+        
     async def start_websocket(self):
         global_value.check_websocket_if_connect = None
         global_value.check_websocket_if_error = False
         global_value.websocket_error_reason = None
+
         if not global_value.SSID:
             await self.authenticate()
+
         self.websocket_client = WebsocketClient(self)
+
+        # Construir headers con cookies y user-agent
+        headers = {}
+        cookies = self.session_data.get("cookies")
+        user_agent = self.session_data.get("user_agent")
+
+        if cookies:
+            headers["Cookie"] = cookies
+        if user_agent:
+            headers["User-Agent"] = user_agent
+
         payload = {
-            "suppress_origin": True,    # CloudFlare handshake status 403 forbidden fix
+            "suppress_origin": True,    # Cloudflare handshake fix
             "ping_interval": 24,
             "ping_timeout": 20,
             "ping_payload": "2",
@@ -470,16 +484,20 @@ class QuotexAPI(object):
                 "ca_certs": cacert,
                 "context": ssl_context
             },
-            "reconnect": 5
+            "reconnect": 5,
+            "header": headers   # ?? Aquí se inyectan cookies y user-agent
         }
+
         if platform.system() == "Linux":
             payload["sslopt"]["ssl_version"] = ssl.PROTOCOL_TLS
+
         self.websocket_thread = threading.Thread(
             target=self.websocket.run_forever,
             kwargs=payload
         )
         self.websocket_thread.daemon = True
         self.websocket_thread.start()
+
         while True:
             if global_value.check_websocket_if_error:
                 return False, global_value.websocket_error_reason
