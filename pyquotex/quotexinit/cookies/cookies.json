@@ -1,0 +1,90 @@
+[
+    {
+        "domain": "qxbroker.com",
+        "expirationDate": 1771391259.226308,
+        "hostOnly": true,
+        "httpOnly": true,
+        "name": "laravel_session",
+        "path": "/",
+        "sameSite": "lax",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "eyJpdiI6Im5FU3pHTlZhbEhZZVFVeG5mdUtpZXc9PSIsInZhbHVlIjoidU05ZXZMcHBHYWQrVS9GcGI1QVRYamk2ejMrTmF4UncwbUp4em9zZWRBRElKN09UeEVRRDh4aUZucWdDbG9keUhkOWZHcW1MdThidVR6bjBwSzRLdW4vWmlNcm9CRURKWUZRbHFmWE1Wd3JyakU1RXdDVVNoVzZ4ckFFQy9RZDUiLCJtYWMiOiIwMzkwOWNlMjM2NmM5NzVkNzUxM2I2Mzk5ZDQzNTY1MWJmMTY4ZDgyODgzODlhMDBjYzk2ODg1YWI4ZTI5NDg0IiwidGFnIjoiIn0%3D"
+    },
+    {
+        "domain": ".qxbroker.com",
+        "expirationDate": 1771385853.021345,
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__cf_bm",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "O_RFGrI.a4wnZvFTrydrAxh_xW.RaS9WVoFcZg1VISw-1771384054-1.0.1.1-eCp9_oggiw.E0PRpmUzzn9PE2hcHIkDyUDao2WFktox4jHcle_QTBEWmVmiHIF8tAOPvWIEFyizAuljLsyhdugpEwbyu83AYRg8Yd_xCA4c"
+    },
+    {
+        "domain": ".qxbroker.com",
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "_cfuvid",
+        "path": "/",
+        "sameSite": "no_restriction",
+        "secure": true,
+        "session": true,
+        "storeId": null,
+        "value": "NGUpmqPHHAXcctg3TvqS6Kd1W.eWaWWoVYkSGXuoBKY-1771384054827-0.0.1.1-604800000"
+    },
+    {
+        "domain": ".qxbroker.com",
+        "hostOnly": false,
+        "httpOnly": true,
+        "name": "__vid_l3",
+        "path": "/",
+        "sameSite": "lax",
+        "secure": true,
+        "session": true,
+        "storeId": null,
+        "value": "72791f57-2503-463f-aaa8-453fbf7604c7"
+    },
+    {
+        "domain": "qxbroker.com",
+        "hostOnly": true,
+        "httpOnly": true,
+        "name": "last_trade",
+        "path": "/",
+        "sameSite": "lax",
+        "secure": true,
+        "session": true,
+        "storeId": null,
+        "value": "eyJpdiI6IjVxckpLUnU1clBZOVMxQnJ0RFpSdHc9PSIsInZhbHVlIjoiV3docUZDOVRGazI3ejRsRk5CMW1Ua0RDdzdxaWVaalNZTDc2Y2Q4UmFMQS8zMFF0Sm5lYUpsWE1qS0NUekZVSSIsIm1hYyI6ImYxMjk3ZmY2ZjgxYjg1MDA1NTBjMTRlZTMwNmQ5MDkyNjNjOGE3ZDEyMTFiYzIyNmRhYmM4ZGVjMzJmMDU4YWMiLCJ0YWciOiIifQ%3D%3D"
+    },
+    {
+        "domain": "qxbroker.com",
+        "expirationDate": 1771617724.09543,
+        "hostOnly": true,
+        "httpOnly": true,
+        "name": "promocode",
+        "path": "/",
+        "sameSite": "lax",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "eyJpdiI6ImRhdVJ6cG1TRGVwaXRiWHRlMU5RM1E9PSIsInZhbHVlIjoicUIxMjNrRXVNYTlGc1A3YW9LQVptN3FEOUFBMDlrNFpvcXVaZ244TWNOdGdMQWRieCtFWTBYa0tMREVVbXdUb1ZWai9kckJ6WXBBU2Y4TVZCVjhXL3hpM0FsWU4xNzhpSE1hZDJvWHR2TUhtNERPNzlxWkY0eG83TWthVXFYaWk1NFZyMXI0YTJJUitlYUxKTXZIY09mTW1BeXd5VkJva05jc2xhdnBBOHBzPSIsIm1hYyI6IjEwOTg5YzlkYmQ0NjQyY2M5NGUyOGM5MzI2NjM0ODQzMDJmOWUxYzdhZTc0YWMxYzY1ZmJlMzBiMWJmZWFkMDIiLCJ0YWciOiIifQ%3D%3D"
+    },
+    {
+        "domain": "qxbroker.com",
+        "expirationDate": 1805572924.095518,
+        "hostOnly": true,
+        "httpOnly": true,
+        "name": "remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d",
+        "path": "/",
+        "sameSite": "lax",
+        "secure": true,
+        "session": false,
+        "storeId": null,
+        "value": "eyJpdiI6Im91S3VXTndGVTExSTN0cWEyQ3FTd3c9PSIsInZhbHVlIjoiajZTYTZycUpXaTVKd0ZhZFpJeGNZYiszRS8yWEtFU2t5YUZ3Zjc5S01vdTJNc3AyTGpwb3h2UEYwOUNGL2hNY2lmVFRyenBza2dnY05wNnZFSzZzSWFHMmxQTGhURTJTVDVOcncycFNydjZ2WCt1eEswZDkrWTAvZkEzaEhQQnhYNWxSSWtWZHVWQWo5VVloWVZ0dHJxV2MwYWZMSUp1Zlp6RWpWbW9ZZVdyVys1WGlQeVBlSmJ4T3daK29vZHBGeVVES0c4M0pUUGg1UWVsY01aSHlRanVRQy9pQjlGaFBnWmRxOUdodkxVcWg4SzZFRGYxQUY3TFhZTzZ6UjlTayIsIm1hYyI6IjIxMTJkZGYwZDYyYWMyNDQ4YjcxZmExNThmMDAyZjE0MTg4ZmRjMWUxNTQ1M2VkMzJjNjc2ZTY5YTZmYTY3ZTkiLCJ0YWciOiIifQ%3D%3D"
+    }
+]
