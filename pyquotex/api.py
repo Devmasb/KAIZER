@@ -450,7 +450,6 @@ class QuotexAPI(object):
 
         self.is_logged = True
         
-            
     async def start_websocket(self):
         global_value.check_websocket_if_connect = None
         global_value.check_websocket_if_error = False
@@ -462,7 +461,7 @@ class QuotexAPI(object):
         self.websocket_client = WebsocketClient(self)
 
         # Construir headers con cookies y user-agent
-        headers = {}
+        headers = []
         cookies = self.session_data.get("cookies")
         user_agent = self.session_data.get("user_agent")
 
@@ -471,13 +470,13 @@ class QuotexAPI(object):
                 # Si cookies es un JSON de Playwright, convertirlo a formato header
                 cookies_list = json.loads(cookies)
                 cookie_str = "; ".join([f"{c['name']}={c['value']}" for c in cookies_list])
-                headers["Cookie"] = cookie_str
+                headers.append(f"Cookie: {cookie_str}")
             except Exception:
                 # Si ya es string, usarlo directamente
-                headers["Cookie"] = cookies
+                headers.append(f"Cookie: {cookies}")
 
         if user_agent:
-            headers["User-Agent"] = user_agent
+            headers.append(f"User-Agent: {user_agent}")
 
         payload = {
             "suppress_origin": True,    # Cloudflare handshake fix
@@ -493,7 +492,7 @@ class QuotexAPI(object):
                 "context": ssl_context
             },
             "reconnect": 5,
-            "header": headers   # ?? Aquí se inyectan cookies y user-agent
+            "http_header": headers   # ?? Aquí se inyectan cookies y user-agent
         }
 
         if platform.system() == "Linux":
@@ -518,7 +517,7 @@ class QuotexAPI(object):
             elif global_value.check_rejected_connection == 1:
                 global_value.SSID = None
                 logger.debug("Websocket Token Rejected.")
-                return True, "Websocket Token Rejected."
+            return True, "Websocket Token Rejected."
 
     def send_ssid(self, timeout=10):
         self.wss_message = None
