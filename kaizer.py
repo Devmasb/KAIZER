@@ -2,6 +2,8 @@
 import asyncio
 from pyquotex.config import credentials
 from pyquotex.stable_api import Quotex
+from pyquotex.cloudflare_helper import get_cloudflare_cookies, refresh_cookies_periodically
+
 from capital import find_best_asset, especialfind_best_asset
 from estrategias.martingala2 import estrategia_martingala
 from estrategias.labouchere import estrategia_labouchere
@@ -253,6 +255,12 @@ async def trade_loop():
     estadofind = True
 
     print("?? Conectando al servidor de Quotex...")
+    cookies = await get_cloudflare_cookies()
+    client.set_session(
+        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36",
+        cookies=json.dumps(cookies)
+    )
+    asyncio.create_task(refresh_cookies_periodically(client.set_session, interval=1800))       
     #client.set_account_mode("REAL")
     conectado, mensaje = await client.connect()
     if not conectado:
