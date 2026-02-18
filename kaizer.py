@@ -2,8 +2,6 @@
 import asyncio
 from pyquotex.config import credentials
 from pyquotex.stable_api import Quotex
-from pyquotex.cloudflare_helper import get_cloudflare_cookies, refresh_cookies_periodically
-
 from capital import find_best_asset, especialfind_best_asset
 from estrategias.martingala2 import estrategia_martingala
 from estrategias.labouchere import estrategia_labouchere
@@ -171,7 +169,7 @@ def enviar_nota_telegram(notaabot):
     payload = {
         "chat_id": CHAT_ID,
         "text": mensaje,
-        "parse_mode": None
+        "parse_mode": "Markdown"
     }
 
     try:
@@ -255,12 +253,6 @@ async def trade_loop():
     estadofind = True
 
     print("?? Conectando al servidor de Quotex...")
-    cookies = await get_cloudflare_cookies()
-    client.set_session(
-        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120 Safari/537.36",
-        cookies=json.dumps(cookies)
-    )
-    #asyncio.create_task(refresh_cookies_periodically(client.set_session, interval=1800))       
     #client.set_account_mode("REAL")
     conectado, mensaje = await client.connect()
     if not conectado:
@@ -639,28 +631,17 @@ async def trade_loop():
     }
 # ?? Entrada principal
 async def main():
-    resultado = {
-        "estado": "error",
-        "balance_final": 0.0,
-        "ganancia_total": 0.0,
-        "perdida_total": 0.0,
-        "recuperacion_neta": 0.0,
-        "stats": {
-            "ganadas": 0,
-            "perdidas": 0,
-            "doji": 0,
-            "errores": 0
-        }
-    }
-
+    
     try:
         resultado = await trade_loop()
         await client.close()
     except Exception as e:
         error_msg = f"⚠️ Error en main: {e}\n{traceback.format_exc()}"
         enviar_nota_telegram(error_msg)
-        
-        
+        # Opcional: esperar unos segundos antes de reiniciar
+        # time.sleep(10)
+
+
     print("\n📋 RESUMEN FINAL DE EJECUCIÓN")
     print("────────────────────────────────────────────")
     print(f"📌 Estado: {resultado['estado'].upper()}")
